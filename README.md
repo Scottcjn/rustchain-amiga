@@ -6,6 +6,18 @@ packaged as a bootable distribution anyone can try for free.
 
 Make Amiga great again.
 
+## Screenshots
+
+The public distribution booting on the open-source AROS ROM, showing the
+hardware-detection demo and the ask-before-mining prompt (default no):
+
+![RustChain Amiga Edition booting on AROS](media/02-distro-banner.png)
+
+The personal tier: Workbench 3.1 on a genuine, license-decrypted Kickstart 3.1
+ROM (Amiga Forever). This image is built locally and never redistributed.
+
+![Workbench 3.1 on a real Kickstart](media/03-workbench31-real-kickstart.png)
+
 ## What is in here
 
 | Dir | What it is |

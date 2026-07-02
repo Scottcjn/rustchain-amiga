@@ -8,3 +8,9 @@ distro/personal/
 emu/roms/kickstart/
 emu/roms/af11/
 distro/personal/testshared/
+devkit/downloads/
+python/bin/upython
+python/bin/upython-min
+fsuae_run*.log
+screenshot_run*.png
+distro/test/shot/
