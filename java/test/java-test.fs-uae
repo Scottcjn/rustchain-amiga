@@ -1,0 +1,30 @@
+# FS-UAE config for the Phase 3 java/ acceptance test.
+# Derived from emu/fsuae/rustchain.fs-uae (see emu/README.md for the why of
+# every setting). Differences: own shared dir (java/test/shared), no A2065
+# (mjvm needs no network), volume label JavaTest.
+#
+# Run headless:
+#   timeout 240 xvfb-run --auto-servernum -s "-screen 0 1280x1024x24" \
+#       fs-uae /home/scott/rustchain-amiga/java/test/java-test.fs-uae
+[fs-uae]
+
+# A4000/040: 68040 with 32-bit addressing (mjvm is compiled -m68020)
+amiga_model = A4000/040
+
+# AROS m68k Kickstart replacement (open source; SHA-1s in emu/roms/HASHES.txt)
+kickstart_file = /home/scott/rustchain-amiga/emu/roms/aros-amiga-m68k-rom.bin
+kickstart_ext_file = /home/scott/rustchain-amiga/emu/roms/aros-amiga-m68k-ext.bin
+
+chip_memory = 2048
+zorro_iii_memory = 32768
+
+# Host directory mapped as the bootable volume. AROS boots it and runs
+# S/startup-sequence, which runs mjvm on HelloWorld.class and redirects
+# the output to SYS:java.log (host-visible as test/shared/java.log).
+hard_drive_0 = /home/scott/rustchain-amiga/java/test/shared
+hard_drive_0_label = JavaTest
+
+fullscreen = 0
+initial_input_grab = 0
+automatic_input_grab = 0
+floppy_drive_volume = 0

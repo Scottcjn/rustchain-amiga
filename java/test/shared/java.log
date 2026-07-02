@@ -1,0 +1,10 @@
+mjvm 0.1 micro-JVM (RustChain Amiga Edition, java/ Phase 3)
+mjvm: loaded HelloWorld (format 52.x, 5 methods, 58 cp entries)
+mjvm: --- program output ---
+RUSTCHAIN-JAVA-MARKER: mjvm running Java bytecode on AmigaOS
+fib(20)=6765
+sumOfSquares(10)=285
+pick(7)=70
+pick(3)=-1
+JAVA-TEST-COMPLETE
+mjvm: --- exit OK ---

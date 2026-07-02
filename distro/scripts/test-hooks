@@ -1,0 +1,11 @@
+; Test-only hook. Injected by distro/test/boot_test.sh into a COPY of the
+; public HDF. Never shipped. Writes boot proof to the Shared: volume that the
+; test config mounts as drive 1.
+echo "RustChain distro HDF boot OK" >Shared:distro_boot.log
+IF EXISTS SYS:C/rustchain_amiga
+  SYS:C/rustchain_amiga --dry-run >Shared:miner-dryrun.log
+  echo "miner dry-run captured" >>Shared:distro_boot.log
+ELSE
+  echo "miner binary missing in image" >>Shared:distro_boot.log
+ENDIF
+echo "test-hooks complete" >>Shared:distro_boot.log

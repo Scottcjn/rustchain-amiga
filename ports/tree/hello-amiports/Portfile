@@ -1,0 +1,9 @@
+# hello-amiports - proves the source-build pipeline end to end.
+# Built from hello.c in this directory with the docker cross toolchain.
+name: hello-amiports
+version: 1.0
+description: proof-of-build hello program, cross-compiled from source
+license: MIT
+build: cross-docker
+source: hello.c
+program: hello

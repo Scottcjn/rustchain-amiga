@@ -1,0 +1,42 @@
+RustChain Amiga Edition - distribution manifest
+generated: 2026-07-02 14:17:59Z by assemble.sh
+
+== public artifacts (size bytes / SHA-1) ==
+      106188  498fe2eaba5485242aef6fa84c0175bc3607024e  pack/rustchain-tools.lha
+      109296  536307e5843a82709a14f53bcf32390034e6ce4b  pack/rustchain-tools.zip
+    67108864  a95314c4f04312c26c3485e6935c674a68d5d2f9  images/RustChainAmiga.hdf
+         908  dc31efb4f795f462b16dc9d28b63cfa51ad9b88d  configs/RustChainAmiga-personal-wb31.fs-uae
+         816  b98b423c14ef723eff6871a3446dc91783e6e772  configs/RustChainAmiga-public.fs-uae
+         887  a5204d37be758df3ead09cecd1554fa01382f08f  test/rustchain-distro.fs-uae
+
+== inputs used ==
+       28864  ad72733c7437dc400b64c853f76e0230210d4933  /home/scott/rustchain-amiga/miner/rustchain_amiga
+       20640  103613e08a605f9a5664abc27af432d7fe5ef2f7  /home/scott/rustchain-amiga/tools/bin/rtctop
+       21712  1d819885b17e70f92bdc85243bc1faa0a4fffb12  /home/scott/rustchain-amiga/tools/bin/rtcfetch
+       20800  b727e4cd0c0021a5eb61b9248766be3662d7a00c  /home/scott/rustchain-amiga/tools/bin/rtcwallet
+      524288  4623642671375e16f99bd3243c3b2a3c4ba92275  /home/scott/rustchain-amiga/emu/roms/aros-amiga-m68k-rom.bin
+      524288  1e9473fb978d51196e4fe593932274a3743926c3  /home/scott/rustchain-amiga/emu/roms/aros-amiga-m68k-ext.bin
+
+== pack drawer tree ==
+     21712  RustChain/C/rtcfetch
+     20640  RustChain/C/rtctop
+     20800  RustChain/C/rtcwallet
+     28864  RustChain/C/rustchain_amiga
+      1101  RustChain/Install_RustChain
+       115  RustChain/S/user-startup-RustChain
+      7931  RustChain/SDK/docs/QUICKSTART.md
+     30616  RustChain/SDK/examples/attest_demo
+      2305  RustChain/SDK/examples/attest_demo.c
+     15736  RustChain/SDK/examples/hello_rustchain
+      1454  RustChain/SDK/examples/hello_rustchain.c
+      2391  RustChain/SDK/include/rc_attest.h
+      2422  RustChain/SDK/include/rc_http.h
+      3454  RustChain/SDK/include/rc_hw.h
+      2534  RustChain/SDK/include/rc_json.h
+       845  RustChain/SDK/include/rc_sha1.h
+      1052  RustChain/SDK/include/rc_u64.h
+     13316  RustChain/SDK/lib/librustchain.a
+      9894  RustChain/docs/MINER.txt
+      2158  RustChain/docs/README.txt
+
+== warnings: none, all inputs present ==

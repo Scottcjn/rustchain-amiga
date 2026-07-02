@@ -1,0 +1,2 @@
+RustChain Amiga environment boot OK
+startup-sequence complete

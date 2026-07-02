@@ -1,0 +1,56 @@
+Phase 3 java/ acceptance evidence
+Run date: 2026-07-02 09:27 CDT (host clock)
+Host: scott's workstation, FS-UAE 3.1.66 (Ubuntu fs-uae 3.1.66-2build2)
+Guest: emulated A4000/040 (68040), AROS m68k Kickstart replacement ROMs
+       (emu/roms/aros-amiga-m68k-rom.bin + -ext.bin, SHA-1s in emu/roms/HASHES.txt)
+Config: java/test/java-test.fs-uae
+Command:
+  cd java && make test-emu
+  (= timeout 240 xvfb-run --auto-servernum -s "-screen 0 1280x1024x24" \
+       fs-uae test/java-test.fs-uae)
+
+What ran inside the guest (test/shared/S/startup-sequence):
+  echo "java test boot OK" >SYS:boot_proof.txt
+  SYS:mjvm SYS:HelloWorld.class >SYS:java.log
+  echo "startup-sequence done" >SYS:done_proof.txt
+
+Artifacts written BY THE GUEST into the mapped host dir (each with an
+FS-UAE .uaem metadata sidecar, which only guest-created files get):
+
+  boot_proof.txt   "java test boot OK"
+  java.log         (below)
+  done_proof.txt   "startup-sequence done"   <- proves mjvm exited cleanly
+                                                and the script continued
+
+test/shared/java.log, byte for byte:
+
+  mjvm 0.1 micro-JVM (RustChain Amiga Edition, java/ Phase 3)
+  mjvm: loaded HelloWorld (format 52.x, 5 methods, 58 cp entries)
+  mjvm: --- program output ---
+  RUSTCHAIN-JAVA-MARKER: mjvm running Java bytecode on AmigaOS
+  fib(20)=6765
+  sumOfSquares(10)=285
+  pick(7)=70
+  pick(3)=-1
+  JAVA-TEST-COMPLETE
+  mjvm: --- exit OK ---
+
+Cross-check: the same HelloWorld.class run with the host OpenJDK
+(java HelloWorld) produces the identical program output lines. fib(20)=6765,
+sum of squares 0..9 = 285, tableswitch/lookupswitch cases correct. The
+computation is real bytecode execution, not canned output.
+
+Binaries as staged for the run:
+  file  test/shared/mjvm  -> AmigaOS loadseg()ble executable/binary  (26584 bytes)
+  sha1  c9589a4975d2666e8af21859091fa09fbde832c9  test/shared/mjvm
+  sha1  34c74d35812c790ba247359ac1bee5f3a2c4fb79  test/shared/HelloWorld.class
+        (javac 21.0.11 --release 8, class file format major 52)
+
+FS-UAE run log (test/fsuae_run.log) confirms the AROS ROMs were loaded:
+  UAE: KS ROM a63586e4 (524288 bytes)
+  UAE: KS ROM 3ad2601f (524288 bytes)
+
+Toolchain for the guest binary:
+  docker amigadev/crosstools:m68k-amigaos, m68k-amigaos-gcc 6.5.0b
+  flags: -noixemul -m68020 -O2 -fomit-frame-pointer -Wall -Wextra
+  (zero warnings)

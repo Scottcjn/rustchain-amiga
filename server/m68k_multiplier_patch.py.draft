@@ -1,0 +1,214 @@
+#!/usr/bin/env python3
+# =============================================================================
+# DRAFT -- DO NOT DEPLOY -- DRAFT -- DO NOT DEPLOY -- DRAFT
+# =============================================================================
+# Motorola 68k antiquity multiplier tiers for RIP-200
+# Target file: rip_200_round_robin_1cpu1vote.py (ANTIQUITY_MULTIPLIERS dict)
+#
+# Status:   PROPOSAL ONLY. Per SPEC.md this is a CHAOTIC-regime consensus
+#           change (touches reward weights). Nothing here goes to any node
+#           (50.28.86.131 / .153 / Ryan's / createkr's) without Scott's
+#           explicit OK and a tri-brain review pass.
+#
+# Written against: ~/tmp_rustchain/node_package/rip_200_round_robin_1cpu1vote.py
+#           (the local copy, which carries the base PowerPC/x86 table).
+#           NOTE: prod nodes run an EXPANDED table (documented in CLAUDE.md,
+#           "Expanded RIP-200 Multiplier Table 2026-03-19") that already has
+#           ARM2=4.0 MYTHIC, StrongARM, SPARC, MIPS tiers and the
+#           derive_verified_device() server-side validation. The same tier
+#           values below slot into either table; the prod patch must be cut
+#           against the prod file, not this local copy.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# RATIONALE
+# -----------------------------------------------------------------------------
+# The antiquity curve rewards age, rarity, and honest silicon. Existing anchor
+# points on the curve:
+#
+#   ARM2 (1986, Archimedes)        4.0x   MYTHIC
+#   ARM3 (1989)                    3.8x   MYTHIC
+#   ARM6/ARM7 (1991-94)            3.0-3.5x LEGENDARY
+#   MIPS R2000-era                 up to 3.0x LEGENDARY
+#   PowerPC G4 (1999)              2.5x
+#   PowerPC G5 (2003)              2.0x
+#   PowerPC G3 (1997)              1.8x
+#   Pentium 4 / POWER8             1.5x
+#
+# The 68k family sits squarely in the MYTHIC/LEGENDARY band by age:
+#
+#   68000  (1979)  older than ARM2 by 7 years, but far more common as
+#                  surviving hardware (Amiga 500/600/1000/2000, Atari ST,
+#                  early Macs, Sega Genesis). Rarity tempers age, so we cap
+#                  below ARM2:                       -> 3.5x  (matches ARM6)
+#   68010  (1982)  minor 68000 revision, uncommon:   -> 3.4x
+#   68020  (1984)  first 32-bit 68k (A1200 EC020,
+#                  Mac II):                          -> 3.0x  (matches ARM7TDMI band)
+#   68030  (1987)  the classic accelerator CPU
+#                  (Blizzard 1230, Mac SE/30):       -> 2.8x  (just above G4,
+#                                                       12 years older than G4)
+#   68040  (1990)  Quadra-class, still plentiful:    -> 2.5x  (parity with G4)
+#   68060  (1994)  last and fastest 68k, made until
+#                  the 2000s, contemporary with
+#                  early PPC:                        -> 2.2x  (between G4 2.5
+#                                                       and G5 2.0)
+#
+# The curve stays monotonic: within-family, older = higher; across families,
+# a 1987 68030 (2.8) > 1999 G4 (2.5) > 1990 68040 (2.5, parity by volume)
+# > 1994 68060 (2.2) > 2003 G5 (2.0). Same shape as the ARM and MIPS ladders.
+#
+# All tiers decay by the standard RIP-200 formula:
+#   aged = 1.0 + (base - 1.0) * (1 - 0.15 * chain_age_years)
+# so none of this changes total emission, only relative weighting, and the
+# vintage bonus still zeroes out after ~16.67 chain-years.
+
+# -----------------------------------------------------------------------------
+# PROPOSED ADDITIONS to ANTIQUITY_MULTIPLIERS
+# (patch style: add this block after the PowerPC entries)
+# -----------------------------------------------------------------------------
+M68K_MULTIPLIER_ADDITIONS = {
+    # --- Motorola 68k family (MYTHIC/LEGENDARY tier) --- DRAFT ---
+    # 68000 (1979) - Amiga 500/600/1000/2000, Atari ST, Mac 128K-Plus, Genesis
+    "68000": 3.5,
+    "m68000": 3.5,
+    "mc68000": 3.5,
+
+    # 68010 (1982) - rare drop-in 68000 upgrade
+    "68010": 3.4,
+    "m68010": 3.4,
+    "mc68010": 3.4,
+
+    # 68020 (1984) - A1200 (EC020), Mac II
+    "68020": 3.0,
+    "m68020": 3.0,
+    "mc68020": 3.0,
+    "68ec020": 3.0,
+
+    # 68030 (1987) - Blizzard/Apollo A1200 accelerators, Mac SE/30, IIci
+    "68030": 2.8,
+    "m68030": 2.8,
+    "mc68030": 2.8,
+    "68ec030": 2.8,
+
+    # 68040 (1990) - A4000/040, Quadra line
+    "68040": 2.5,
+    "m68040": 2.5,
+    "mc68040": 2.5,
+    "68lc040": 2.5,
+
+    # 68060 (1994) - last 68k; Blizzard 1260, Cyberstorm
+    "68060": 2.2,
+    "m68060": 2.2,
+    "mc68060": 2.2,
+
+    # Generic / family-level fallbacks. A bare "m68k"/"68k" claim with no
+    # specific CPU gets the LOWEST family tier, never the highest -- a miner
+    # must prove the specific (older, rarer) part via AttnFlags detection to
+    # earn more. Same conservative-default principle as "powerpc" -> G4 is
+    # NOT followed here on purpose: PowerPC-generic maps high because G4s
+    # dominate that fleet; 68k-generic maps low because emulators dominate
+    # the 68k population.
+    "m68k": 2.2,
+    "68k": 2.2,
+    "motorola 68k": 2.2,
+    "motorola": 2.2,
+}
+
+# Family notes (device_family values expected from clients):
+#   family="m68k" covers Amiga ("amiga"), Atari ST ("atari_st"), and classic
+#   68k Macintosh ("classic_mac_68k") host platforms. The multiplier is keyed
+#   on device_arch (the CPU), NOT the host platform: a 68030 earns 2.8x
+#   whether it sits in an A1200, a Mega STE, or an SE/30. The platform string
+#   goes in device_model / family metadata and drives WHICH ROM database the
+#   server checks (Kickstart SHA-1 vs Apple checksum vs Atari TOS).
+
+# -----------------------------------------------------------------------------
+# DETECTION AND ANTI-EMULATION (server-side requirements)
+# -----------------------------------------------------------------------------
+# Client side (see miner/rustchain_amiga_miner.c):
+#   - CPU detected from ExecBase->AttnFlags (AFF_68010/020/030/040/060 bits,
+#     plus FPU bits) -> device payload:
+#       family = "m68k"
+#       arch   = "68030" (etc.)
+#       model  = "Amiga (AROS/FS-UAE)" or real model string
+#       rom_hash, rom_size, kick_version  (SHA-1 of 512KB ROM at 0xF80000,
+#                                          ExecBase lib_Version)
+#
+# Server side MUST NOT award any m68k tier on self-report alone. Required
+# cross-checks before the multiplier applies (weight falls to the standard
+# flagged/emulated rate otherwise):
+#
+#   1. ROM hash cross-check against rom_fingerprint_db.py:
+#        from rom_fingerprint_db import is_known_emulator_rom, identify_rom
+#        - Amiga Kickstart SHA-1s (1.2/1.3/2.04/2.05/3.1, Cloanto variant,
+#          CD32, CDTV) are already catalogued: a match = emulator ROM pack
+#          -> flag "known_emulator_rom", emulated weight.
+#        - The AROS m68k replacement ROM hash should be ADDED to the DB as a
+#          known-emulator indicator before this patch ships (our own FS-UAE
+#          test in SPEC.md acceptance A5 will report exactly that hash).
+#        - Kickstart 3.2.x hashes (Hyperion, 2021-2025) should also be added:
+#          legal to own, but identical dumps clustering across many miners is
+#          still the emulator-farm signal.
+#   2. ROM clustering via ROMClusterDetector (rom_clustering_server.py):
+#        2+ distinct miners reporting the same rom_hash -> flag all of them.
+#        Real Amigas show ROM revision spread (r34.5 vs r37.x vs r40.68 per
+#        model, plus regional variants); UAE farms all report one hash.
+#   3. Standard RIP-PoA fingerprint envelope still applies where the client
+#      can run it. A real 8 MHz 68000 cannot fake modern-host timing: clock
+#      skew, cache profile (68000 has NO cache; 68020 256B; 68030 256B+256B;
+#      68040/060 4K/8K split) and instruction jitter must be consistent with
+#      the CLAIMED arch. A "68000" attesting with sub-microsecond HTTP
+#      turnaround or a flat modern cache curve is a host-CPU emulation tell.
+#   4. PiStorm / Emu68 / Vampire policy: PiStorm is ARM silicon emulating
+#      68k (would pass AttnFlags checks but fail timing/ROM checks -- Emu68
+#      typically maps a standard Kickstart image = clustering catch).
+#      Vampire/Apollo 68080 FPGA cores report AttnFlags 68040+ patterns but
+#      are not Motorola silicon; propose treating both as "modern" (1.0x) at
+#      best, pending a separate policy RIP.
+#   5. Hardware binding: _compute_hardware_id() must receive the m68k
+#      device fields (accept both `model|arch|family` and
+#      `device_model|device_arch|device_family` -- remember the 2025-12-20
+#      field-name collision bug) plus rom_hash, so two emulator instances on
+#      one host cannot enroll as two "different" A1200s.
+#
+# Expected outcome for THIS project's own test rig (FS-UAE + AROS ROM,
+# wallet amiga-fsuae-scott): flagged as emulated, minimal/zero weight.
+# That is the acceptance criterion (SPEC.md A4/A5), not a failure.
+
+# -----------------------------------------------------------------------------
+# ILLUSTRATIVE PATCH (unified-diff style, against the local node_package copy)
+# -----------------------------------------------------------------------------
+PATCH_PREVIEW = r"""
+--- a/rip_200_round_robin_1cpu1vote.py
++++ b/rip_200_round_robin_1cpu1vote.py
+@@ ANTIQUITY_MULTIPLIERS = {
+     # PowerPC G3
+     "g3": 1.8,
+     "powerpc g3": 1.8,
+     "powerpc g3 (750)": 1.8,
++
++    # --- Motorola 68k family (DRAFT, see m68k_multiplier_patch.py.draft) ---
++    "68000": 3.5, "m68000": 3.5, "mc68000": 3.5,
++    "68010": 3.4, "m68010": 3.4, "mc68010": 3.4,
++    "68020": 3.0, "m68020": 3.0, "mc68020": 3.0, "68ec020": 3.0,
++    "68030": 2.8, "m68030": 2.8, "mc68030": 2.8, "68ec030": 2.8,
++    "68040": 2.5, "m68040": 2.5, "mc68040": 2.5, "68lc040": 2.5,
++    "68060": 2.2, "m68060": 2.2, "mc68060": 2.2,
++    "m68k": 2.2, "68k": 2.2, "motorola 68k": 2.2, "motorola": 2.2,
+"""
+
+# -----------------------------------------------------------------------------
+# OPEN QUESTIONS FOR SCOTT (block deployment until answered)
+# -----------------------------------------------------------------------------
+# Q1. 68000 at 3.5x vs ARM2 at 4.0x: happy with rarity-over-age tempering, or
+#     should the 1979 68000 outrank the 1986 ARM2?
+# Q2. Vampire 68080 and PiStorm: hard-code to 1.0x "modern", or their own
+#     small tier (e.g. 1.1x "neo-retro")? Draft assumes 1.0x max.
+# Q3. Should family-generic "m68k" (2.2x floor) instead be rejected outright,
+#     forcing arch-specific attestation?
+# Q4. Add AROS replacement ROM + Kickstart 3.2.x hashes to rom_fingerprint_db
+#     in the same change, or as a separate prior patch? (Recommend prior.)
+#
+# =============================================================================
+# DRAFT -- DO NOT DEPLOY -- DRAFT -- DO NOT DEPLOY -- DRAFT
+# =============================================================================

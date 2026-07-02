@@ -1,0 +1,25 @@
+RustChain Amiga Edition v1.0 - Make Amiga Great Again
+=====================================================
+
+You booted the PUBLIC RustChain Amiga Edition image. It is built on the
+open-source AROS m68k Kickstart replacement plus a plain FFS volume, so
+the whole image is freely redistributable. No Commodore-licensed OS
+files are inside.
+
+What's here
+-----------
+  S/startup-sequence   banner, miner dry-run demo, optional mining prompt
+  C/                   rustchain_amiga miner + rtc* tools (as built)
+  SDK/                 librustchain headers + lib for development
+  docs/                this file, tools README, licensing
+  T/                   scratch; rustchain-lastrun.log lands here each boot
+
+The boot prompt asks whether to start mining. Default is NO. Edit
+S/startup-sequence and set your own --wallet id before answering y.
+
+Emulator note: this image is expected to be flagged as emulated by the
+RustChain server (that is the anti-emulation system working). To earn
+real antiquity rewards, install the tools pack on a real Amiga.
+
+AROS is (c) the AROS Development Team, AROS Public License.
+RustChain tools: see the RustChain repository license.

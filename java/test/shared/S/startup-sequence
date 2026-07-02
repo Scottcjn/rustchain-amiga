@@ -1,0 +1,3 @@
+echo "java test boot OK" >SYS:boot_proof.txt
+SYS:mjvm SYS:HelloWorld.class >SYS:java.log
+echo "startup-sequence done" >SYS:done_proof.txt

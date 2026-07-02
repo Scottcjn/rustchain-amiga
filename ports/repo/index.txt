@@ -1,0 +1,3 @@
+# amiports repo index - name|version|archive|sha1|size|license|description
+hello-amiports|1.0|hello-amiports-1.0.apak|8fd739b3445f653b89a1cd49afedce11fa7c9bec|7765|MIT|proof-of-build hello program, cross-compiled from source
+rustchain-tools|1.0|rustchain-tools-1.0.apak|7aa76520a9cfbf9434dc3e26fb61445f882eaa27|92114|MIT|RustChain tools for AmigaOS - rtcwallet, rtcfetch, rtctop and the attestation miner

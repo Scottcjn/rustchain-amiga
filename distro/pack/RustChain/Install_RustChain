@@ -1,0 +1,26 @@
+; Install_RustChain - installs the RustChain tools drawer on stock Workbench.
+; Usage from a Shell, with the extracted archive's parent as current dir:
+;   execute RustChain/Install_RustChain
+; What it does: copies the RustChain drawer to SYS:RustChain and appends a
+; path line to S:user-startup (only once - guarded by a marker file).
+failat 21
+echo ""
+echo "RustChain tools installer for AmigaOS Workbench"
+IF NOT EXISTS RustChain
+  echo "Run me from the directory that CONTAINS the RustChain drawer:"
+  echo "  execute RustChain/Install_RustChain"
+  quit 10
+ENDIF
+echo "Copying RustChain drawer to SYS:RustChain ..."
+copy RustChain SYS:RustChain ALL CLONE QUIET
+IF EXISTS SYS:RustChain/S/installed-marker
+  echo "user-startup already patched earlier - leaving it alone."
+ELSE
+  echo "Adding RustChain path to S:user-startup ..."
+  type SYS:RustChain/S/user-startup-RustChain >>S:user-startup
+  echo "patched" >SYS:RustChain/S/installed-marker
+ENDIF
+echo ""
+echo "Done. Reboot (or run: path SYS:RustChain/C ADD) and try:"
+echo "  rustchain_amiga --test-only"
+echo "Docs are in SYS:RustChain/docs/"

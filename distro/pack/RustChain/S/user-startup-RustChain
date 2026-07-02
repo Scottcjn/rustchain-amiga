@@ -1,0 +1,4 @@
+;BEGIN RustChain
+; RustChain tools path (added by Install_RustChain)
+path SYS:RustChain/C ADD >NIL:
+;END RustChain

@@ -1,0 +1,62 @@
+# RustChain Amiga miner test environment
+# FS-UAE 3.1.66 (Ubuntu package fs-uae 3.1.66-2build2)
+# Boots the open-source AROS m68k Kickstart replacement (no commercial ROMs).
+#
+# Run:
+#   fs-uae /home/scott/rustchain-amiga/emu/fsuae/rustchain.fs-uae
+# Headless (no usable display):
+#   xvfb-run -a fs-uae /home/scott/rustchain-amiga/emu/fsuae/rustchain.fs-uae
+[fs-uae]
+
+# --- Model ---
+# A4000/040: 68040 with 32-bit addressing, needed for Zorro III fast RAM.
+# AROS m68k wants a 68020+ and boots happily on this model.
+amiga_model = A4000/040
+
+# --- Kickstart: AROS m68k replacement (open source) ---
+# SHA-1s recorded in ../roms/HASHES.txt
+kickstart_file = /home/scott/rustchain-amiga/emu/roms/aros-amiga-m68k-rom.bin
+kickstart_ext_file = /home/scott/rustchain-amiga/emu/roms/aros-amiga-m68k-ext.bin
+
+# --- Memory ---
+# 2 MB chip + 32 MB Zorro III fast (spec asks for 8 MB or more)
+chip_memory = 2048
+zorro_iii_memory = 32768
+
+# --- Networking ---
+# bsdsocket.library emulation: guest AmigaOS/AROS socket calls are handled by
+# host sockets directly. No NIC, no guest TCP stack needed. This is the
+# primary network path for the miner.
+bsdsocket_library = 1
+
+# A2065 Zorro II Ethernet + slirp user-mode NAT (secondary/optional path).
+# FS-UAE 3.1 passes unknown uae_* options straight to the WinUAE core, which
+# supports "a2065=slirp" (built-in SLIRP user mode NAT compiled into this
+# binary; no winpcap, no root needed).
+# VERIFIED WORKING 2026-07-01 on this exact build (3.1.66-2build2). With the
+# option enabled, ~/Documents/FS-UAE/Cache/Logs/fs-uae.log.txt shows:
+#   set option "a2065" to "slirp" (result: 1)
+#   A2065: 'slirp' 00:00:00:32:33:34
+#   Card 1: Z2 0x00e90000   64K IO  A2065 Z2 Ethernet
+# Enabled below. Note the miner itself uses bsdsocket (above); the A2065 is
+# only useful if a SANA-II driver + guest TCP stack (e.g. AmiTCP/Roadshow/
+# AROS TCP) is installed on the boot volume. The bare AROS ROM boot does not
+# load one, so this card sits idle but harmless during the integration run.
+uae_a2065 = slirp
+# Optional slirp port forwards host->guest, WinUAE syntax (host port:guest port):
+# uae_slirp_redir = tcp:2222:22
+
+# --- Hard drive: host directory mapped as bootable volume ---
+# FS-UAE exposes this as DH0: (device) with volume name "RustChain".
+# AROS boots it and runs S/startup-sequence from it (see ../../shared/S/).
+hard_drive_0 = /home/scott/rustchain-amiga/shared
+hard_drive_0_label = RustChain
+
+# --- Convenience / evidence capture ---
+fullscreen = 0
+initial_input_grab = 0
+automatic_input_grab = 0
+floppy_drive_volume = 0
+screenshots_output_dir = /home/scott/rustchain-amiga/emu/fsuae/screenshots
+# stdout carries the full emulation log; keep a copy with:
+#   fs-uae rustchain.fs-uae > fsuae_run.log 2>&1

@@ -1,0 +1,13 @@
+# rustchain-tools - the RustChain Amiga tool set as a package.
+# Prebuilt binaries produced by the tools/ and miner/ workstreams
+# (AmigaOS hunk executables, cross-compiled with the same docker
+# toolchain; sources live in tools/src/ and miner/).
+name: rustchain-tools
+version: 1.0
+description: RustChain tools for AmigaOS - rtcwallet, rtcfetch, rtctop and the attestation miner
+license: MIT
+build: prebuilt
+rootfile: tools/bin/rtcwallet rtcwallet
+rootfile: tools/bin/rtcfetch rtcfetch
+rootfile: tools/bin/rtctop rtctop
+rootfile: miner/rustchain_amiga rustchain_amiga

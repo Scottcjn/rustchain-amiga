@@ -1,0 +1,21 @@
+# RustChain Amiga Edition v1.0 - PUBLIC image boot config
+# Boots images/RustChainAmiga.hdf on the open-source AROS m68k ROM.
+# Everything referenced here is redistributable.
+#
+# Run:  fs-uae RustChainAmiga-public.fs-uae
+# Paths are relative to this file's directory (../images, ../../emu/roms).
+[fs-uae]
+amiga_model = A4000/040
+kickstart_file = ../../emu/roms/aros-amiga-m68k-rom.bin
+kickstart_ext_file = ../../emu/roms/aros-amiga-m68k-ext.bin
+chip_memory = 2048
+zorro_iii_memory = 32768
+# bsdsocket: guest socket calls run on the host directly - the miner's network path
+bsdsocket_library = 1
+# A2065 + slirp NAT, idle unless a SANA-II stack is installed; harmless
+uae_a2065 = slirp
+hard_drive_0 = ../images/RustChainAmiga.hdf
+fullscreen = 0
+initial_input_grab = 0
+automatic_input_grab = 0
+floppy_drive_volume = 0

@@ -1,0 +1,43 @@
+# DRAFT - DO NOT DEPLOY WITHOUT SCOTT'S OK
+# =========================================
+# Adds the AROS m68k Kickstart-replacement ROM hashes to rom_fingerprint_db.py
+# so the clustering server flags them proactively instead of waiting for 3+
+# miners to collide on the hash.
+#
+# Why now (tribrain Brain 4, 2026-07-02): the RustChain Amiga Edition public
+# distro boots the AROS ROM in FS-UAE. Every user who tries it will report one
+# of these two SHA-1s. Today they are unknown-unique; after this patch they are
+# recognized as emulator/replacement ROMs on first sight, same as pirated
+# Kickstart dumps. Real Amigas with real Kickstarts are unaffected.
+#
+# Hashes verified locally 2026-07-01 against the ROM bundled in Ubuntu's
+# fs-uae 3.1.66 package (extracted from /usr/share/fs-uae/fs-uae.dat),
+# AROS SVN50730 build 2015-05-20, APL license. See emu/roms/HASHES.txt.
+#
+# Deploy target: /root/rustchain/rom_fingerprint_db.py on nodes 1 and 2
+# (and the copies on nodes 3/4 if they run the clustering server).
+# Apply by inserting these entries into the AMIGA_KICKSTART_SHA1 dict.
+
+AROS_M68K_SHA1_ENTRIES = {
+    # AROS m68k main ROM (Kickstart replacement, open source, APL)
+    # Bundled with FS-UAE and WinUAE as the free legal ROM
+    "4623642671375e16f99bd3243c3b2a3c4ba92275": {
+        "version": "AROS m68k SVN50730 (main)",
+        "year": 2015,
+        "models": ["UAE-any"],
+        "common_in_emulators": True,
+        "note": "open-source Kickstart replacement, not pirated, still emulator-only",
+    },
+    # AROS m68k extended ROM (same build)
+    "1e9473fb978d51196e4fe593932274a3743926c3": {
+        "version": "AROS m68k SVN50730 (ext)",
+        "year": 2015,
+        "models": ["UAE-any"],
+        "common_in_emulators": True,
+        "note": "open-source Kickstart replacement, not pirated, still emulator-only",
+    },
+}
+
+# Suggested follow-up in the same deploy (docs agent Q4): also add the
+# Kickstart 3.2.x and Cloanto 3.X ROM SHA-1s once we can hash decrypted
+# copies (needs rom.key from the Amiga Forever re-download).

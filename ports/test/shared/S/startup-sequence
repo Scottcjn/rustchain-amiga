@@ -1,0 +1,23 @@
+; amiport in-guest integration test (AROS m68k ROM boot)
+; The ROM-internal shell runs this from the boot volume. Keep it to echo,
+; redirection and program launches (see emu/README.md gotchas: "version"
+; is not a ROM command, use SYS: not DH0:).
+echo "amiport test boot OK" >SYS:amiport-test.log
+
+; 1. list the repo (host http.server on 127.0.0.1:8873 via bsdsocket)
+SYS:amiport list --repo http://127.0.0.1:8873 >>SYS:amiport-test.log
+
+; 2. install the source-built package
+SYS:amiport install hello-amiports --repo http://127.0.0.1:8873 >>SYS:amiport-test.log
+
+; 3. run the binary that amiport just installed
+SYS:amiports/hello-amiports/hello >>SYS:amiport-test.log
+
+; 4. install the multi-file prebuilt package too (4 hunk binaries, 92KB;
+;    hermetic - installing does not talk to any RustChain node)
+SYS:amiport install rustchain-tools --repo http://127.0.0.1:8873 >>SYS:amiport-test.log
+
+; 5. show the local package db
+SYS:amiport installed >>SYS:amiport-test.log
+
+echo "amiport test done" >>SYS:amiport-test.log

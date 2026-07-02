@@ -1,0 +1,7 @@
+emu/roms/licensed/
+shared/*.uaem
+shared/rustchain_amiga
+*.tar
+*.hdf
+*.adf
+distro/personal/

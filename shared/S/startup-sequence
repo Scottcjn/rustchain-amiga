@@ -1,0 +1,18 @@
+; RustChain Amiga miner auto-run (AROS m68k ROM boot)
+; AROS boots this volume (highest boot priority) and its ROM-internal shell
+; executes S:startup-sequence. echo and redirection are ROM-internal commands.
+; SYS: always refers to the boot volume, so this works whether FS-UAE exposes
+; the directory as DH0: or DH1:.
+echo "RustChain Amiga environment boot OK" >SYS:boot_proof.txt
+; note: "version" is NOT a ROM-internal command in the AROS boot shell,
+; keep this script to echo/redirection and program launches only
+
+; --- miner auto-run ---
+; The miner binary is built by the miner agent as rustchain_amiga and should
+; be copied into the shared/ directory (this volume's root).
+; Placeholder until the binary exists (uncomment the two lines below and
+; delete the echo placeholder once shared/rustchain_amiga is in place):
+SYS:rustchain_amiga --dry-run >SYS:miner.log
+SYS:rustchain_amiga --once --node 50.28.86.131:8088 --wallet amiga-fsuae-scott >>SYS:miner.log
+
+echo "startup-sequence complete" >>SYS:boot_proof.txt

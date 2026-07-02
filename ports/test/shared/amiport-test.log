@@ -1,0 +1,27 @@
+amiport test boot OK
+NAME                 VERSION         SIZE  DESCRIPTION
+hello-amiports       1.0             7765  proof-of-build hello program, cross-compiled from source
+rustchain-tools      1.0            92114  RustChain tools for AmigaOS - rtcwallet, rtcfetch, rtctop and the attestation miner
+2 packages in the repo
+installing hello-amiports 1.0 (7765 bytes, MIT)
+  fetched hello-amiports-1.0.apak: 7765 bytes
+  sha1 verified: 8fd739b3445f653b89a1cd49afedce11fa7c9bec
+  extracted hello (7736 bytes)
+installed hello-amiports 1.0 to SYS:amiports/hello-amiports (1 file)
+hello from amiports!
+this binary was built from source by the amiports harness,
+fetched over HTTP, sha1-verified and installed by amiport.
+HELLO_AMIPORTS_PROOF_V1
+installing rustchain-tools 1.0 (92114 bytes, MIT)
+  fetched rustchain-tools-1.0.apak: 92114 bytes
+  sha1 verified: 7aa76520a9cfbf9434dc3e26fb61445f882eaa27
+  extracted rtcwallet (20800 bytes)
+  extracted rtcfetch (21712 bytes)
+  extracted rtctop (20640 bytes)
+  extracted rustchain_amiga (28864 bytes)
+installed rustchain-tools 1.0 to SYS:amiports/rustchain-tools (4 files)
+installed packages (SYS:amiports/installed.db):
+  hello-amiports|1.0|8fd739b3445f653b89a1cd49afedce11fa7c9bec|1
+  rustchain-tools|1.0|7aa76520a9cfbf9434dc3e26fb61445f882eaa27|4
+2 records
+amiport test done

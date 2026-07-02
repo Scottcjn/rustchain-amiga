@@ -1,0 +1,17 @@
+HTTP/1.1 200 OK
+Server: nginx
+Date: Thu, 02 Jul 2026 13:49:32 GMT
+Content-Type: application/json
+Content-Length: 114
+Connection: close
+X-Request-Id: 2aa69ec80b304d539ebdcbd3bfbc4e8a
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https://img.shields.io; connect-src 'self' https://raw.githubusercontent.com
+Referrer-Policy: strict-origin-when-cross-origin
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-Frame-Options: SAMEORIGIN
+X-Content-Type-Options: nosniff
+X-RustChain: Proof-of-Antiquity
+
+{"blocks_per_epoch":144,"enrolled_miners":23,"epoch":211,"epoch_pot":1.5,"slot":30488,"total_supply_rtc":8388608}

@@ -1,0 +1,43 @@
+=== FS-UAE stdout log (headless boot test, 2026-07-01) ===
+FS-UAE 3.1.66 (Built for Linux x86-64)
+Copyright 1995-2002 Bernd Schmidt, 1999-2017 Toni Wilen,
+2003-2007 Richard Drummond, 2006-2011 Mustafa 'GnoStiC' Tufan,
+2011-2017 Frode Solheim, and contributors.
+
+This is free software; see the file COPYING for copying conditions. There
+is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE. See the README for more copyright info, and the source code for
+a full list of contributors
+
+UAE: Initializing core derived from WinUAE 3300b2
+WARNING: CPU scaling governor is 'powersave', not 'performance'
+WARNING: Emulation frame rate may suffer
+LOG: /home/scott/Documents/FS-UAE/Cache/Logs/fs-uae.log.txt
+WARNING: No HW OpenGL driver: llvmpipe (LLVM 20.1.8, 256 bits)
+# Keyboards path: /home/scott/Documents/FS-UAE/Data/Devs/Keyboards
+UAE: KS ROM a63586e4 (524288 bytes)
+UAE: KS ROM 3ad2601f (524288 bytes)
+ -- stub -- my_resolvesoftlink 
+res_initcode context = (nil)
+UAE: Calling uae_quit
+UAE: Stopping
+
+=== Key lines from ~/Documents/FS-UAE/Cache/Logs/fs-uae.log.txt (slirp-enabled run) ===
+23:uae_a2065 = slirp
+46:bsdsocket_library = 1
+399:set option "bsdsocket_emu" to "yes" (result: 1)
+452:set option "filesystem2" to "rw,DH0:RustChain:/home/scott/rustchain-amiga/shared,0" (result: 1)
+453:set option "uaehf0" to "dir,rw,DH0:RustChain:/home/scott/rustchain-amiga/shared,0" (result: 1)
+502:set option "a2065" to "slirp" (result: 1)
+604:bsdsocket.library installed
+808:A2065: 'slirp' 00:00:00:32:33:34
+1053:Card 1: Z2 0x00e90000   64K IO  A2065 Z2 Ethernet
+1072:00E90000      64K/0 =      64K A2065 Z2 Ethernet
+1085:Creating UAE bsdsocket.library 4.1
+
+=== Guest-written boot proof (shared/boot_proof.txt) ===
+RustChain Amiga environment boot OK
+version: object not found
+startup-sequence complete
+
+Screenshot: screenshots/aros_boot_75s.png shows AROS shell: 'Copyright 1995-2015, The AROS Development Team. Licensed under the AROS Public License. Version SVN50730, built on 2015-05-20.' with 1> prompt

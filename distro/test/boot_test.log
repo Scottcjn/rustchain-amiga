@@ -1,0 +1,23 @@
+XIO:  fatal IO error 4 (Interrupted system call) on X server ":100"
+      after 27198 requests (27198 known processed) with 0 events remaining.
+FS-UAE 3.1.66 (Built for Linux x86-64)
+Copyright 1995-2002 Bernd Schmidt, 1999-2017 Toni Wilen,
+2003-2007 Richard Drummond, 2006-2011 Mustafa 'GnoStiC' Tufan,
+2011-2017 Frode Solheim, and contributors.
+
+This is free software; see the file COPYING for copying conditions. There
+is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE. See the README for more copyright info, and the source code for
+a full list of contributors
+
+UAE: Initializing core derived from WinUAE 3300b2
+WARNING: CPU scaling governor is 'powersave', not 'performance'
+WARNING: Emulation frame rate may suffer
+LOG: /home/scott/Documents/FS-UAE/Cache/Logs/fs-uae.log.txt
+WARNING: No HW OpenGL driver: llvmpipe (LLVM 20.1.8, 256 bits)
+# Keyboards path: /home/scott/Documents/FS-UAE/Data/Devs/Keyboards
+UAE: KS ROM a63586e4 (524288 bytes)
+UAE: KS ROM 3ad2601f (524288 bytes)
+ -- stub -- my_resolvesoftlink 
+ -- stub -- my_resolvesoftlink 
+res_initcode context = (nil)

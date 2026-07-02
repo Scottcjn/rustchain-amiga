@@ -1,0 +1,23 @@
+RustChain Amiga Miner v1.0
+  CPU:       MC68040 (fpu: 040-fpu)
+  Arch:      68040 / family m68k
+  AttnFlags: 0xc04f
+  Kickstart: 51.51
+  ROM:       sha1=4623642671375e16f99bd3243c3b2a3c4ba92275 size=524288 checksum=45232665
+  Free mem:  41788 KB
+--- payload for POST http://50.28.86.131:8088/attest/submit ---
+{"miner":"amiga-fsuae-scott","miner_id":"amiga-fsuae-scott","nonce":"dry-run-nonce","report":{"nonce":"dry-run-nonce","commitment":"1a5ff912adcf9ba6c4adb0560db28106f7bba709","derived":{"mean_ns":771603,"variance_ns":5330448465,"min_ns":703091,"max_ns":959529,"sample_count":16},"entropy_score":5330448465},"device":{"family":"m68k","arch":"68040","model":"Amiga (AROS/FS-UAE)","cpu":"MC68040","fpu":"040-fpu","cores":1,"memory_gb":0,"memory_kb":41788,"machine":"m68k","attn_flags":49231,"rom_hash":"4623642671375e16f99bd3243c3b2a3c4ba92275","rom_size":524288,"rom_checksum":45232665,"kick_version":"51.51","miner_version":"1.0"},"signals":{"macs":[],"hostname":"amiga-fsuae"},"fingerprint":{"all_passed":false,"checks":{"clock_drift":{"passed":true,"data":{"mean_ns":771603,"stdev_ns":73009,"cv":0.094619,"drift_stdev":104061,"timer_source":"eclock","samples_ns":[703091,767905,704500,766496,767905,704500,831310,703091,831310,704500,894715,959529,767905,767905,767905,703091]}},"anti_emulation":{"passed":false,"data":{"platform":"amigaos","vm_indicators":["uae.resource","bsdsocket_id:uae"]}}}}}
+RustChain Amiga Miner v1.0
+  CPU:       MC68040 (fpu: 040-fpu)
+  Arch:      68040 / family m68k
+  AttnFlags: 0xc04f
+  Kickstart: 51.51
+  ROM:       sha1=4623642671375e16f99bd3243c3b2a3c4ba92275 size=524288 checksum=45232665
+  Free mem:  41788 KB
+[ATTEST] requesting challenge from 50.28.86.131:8088
+[OK] got nonce
+[INFO] UAE detected, reporting honestly (flagging expected)
+[ATTEST] submitting (1204 bytes)
+[PASS] attestation accepted
+       ticket: ticket_661bf5e06792f882d38ac14e8778c7d1
+       flagged: emulated hardware, minimal reward (by design)

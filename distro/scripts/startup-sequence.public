@@ -1,0 +1,42 @@
+; RustChain Amiga Edition v1.0 - public AROS-based image
+; This startup-sequence runs from the AROS m68k ROM's internal shell.
+; Only ROM-internal commands are used (echo, if/else/endif, exists, ask,
+; execute, failat, path, redirection). "version" is NOT internal - do not add it.
+; NOTE: no "*" inside echo strings - "*" is the AmigaDOS quote-escape char
+; and makes echo fail with "argument line invalid or too long".
+failat 21
+echo ""
+echo "=== RustChain Amiga Edition v1.0 - Make Amiga Great Again ==="
+echo ""
+path SYS:C ADD >NIL:
+
+; Miner dry-run demo. Guarded so a missing binary cannot wedge the boot.
+; One bounded log per boot: overwrite SYS:T/rustchain-lastrun.log, never
+; append across boots (a reboot loop must not grow a log forever).
+IF EXISTS SYS:C/rustchain_amiga
+  echo "Running miner hardware-detection demo (dry run, no network)..."
+  SYS:C/rustchain_amiga --dry-run >SYS:T/rustchain-lastrun.log
+  echo "Demo payload written to SYS:T/rustchain-lastrun.log"
+ELSE
+  echo "SYS:C/rustchain_amiga not found - demo skipped"
+ENDIF
+
+; Test harness hook. The shipped image does NOT contain S/Test-Hooks;
+; the boot-test injects it into a throwaway copy. EXISTS on a file of the
+; mounted boot volume is safe (no insert-volume requester).
+IF EXISTS SYS:S/Test-Hooks
+  execute SYS:S/Test-Hooks
+ENDIF
+
+; Optional real mining - DEFAULT IS NO (plain Enter or n skips it).
+; Edit the wallet id below to your own before answering y.
+IF EXISTS SYS:C/rustchain_amiga
+  ask "Start RustChain mining now? (y/N)"
+  IF WARN
+    echo "Starting miner - Ctrl-C in its window stops it."
+    SYS:C/rustchain_amiga --node 50.28.86.131:8088 --wallet amiga-distro-user >>SYS:T/rustchain-lastrun.log
+  ELSE
+    echo "Mining not started. Run SYS:C/rustchain_amiga yourself anytime."
+  ENDIF
+ENDIF
+echo "RustChain Amiga Edition ready. Docs in SYS:docs/"

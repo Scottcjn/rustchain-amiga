@@ -1,0 +1,34 @@
+# amiport in-guest integration test config
+# Derived from emu/fsuae/rustchain.fs-uae (see emu/README.md for the boot
+# mechanics). Differences: boots ports/test/shared/ as the SYS: volume so
+# the amiport client runs from S/startup-sequence, own screenshots dir.
+#
+# Run through ports/test/run_test.sh, or by hand:
+#   xvfb-run --auto-servernum -s "-screen 0 1280x1024x24" \
+#       fs-uae /home/scott/rustchain-amiga/ports/test/amiport-test.fs-uae
+[fs-uae]
+
+# A4000/040: 68020+ as AROS m68k wants, 32-bit addressing for Zorro III RAM
+amiga_model = A4000/040
+
+# AROS m68k Kickstart replacement (open source; SHA-1s in emu/roms/HASHES.txt)
+kickstart_file = /home/scott/rustchain-amiga/emu/roms/aros-amiga-m68k-rom.bin
+kickstart_ext_file = /home/scott/rustchain-amiga/emu/roms/aros-amiga-m68k-ext.bin
+
+chip_memory = 2048
+zorro_iii_memory = 32768
+
+# bsdsocket.library emulation: guest socket calls run as host socket calls,
+# the guest shares the host network identity. 127.0.0.1 in the guest IS the
+# host loopback, which is how amiport reaches the repo server.
+bsdsocket_library = 1
+
+# Boot volume: the test's own shared dir (amiport binary + startup-sequence)
+hard_drive_0 = /home/scott/rustchain-amiga/ports/test/shared
+hard_drive_0_label = AmiPorts
+
+fullscreen = 0
+initial_input_grab = 0
+automatic_input_grab = 0
+floppy_drive_volume = 0
+screenshots_output_dir = /home/scott/rustchain-amiga/ports/test/screenshots

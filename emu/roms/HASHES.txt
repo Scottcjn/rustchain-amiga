@@ -1,0 +1,30 @@
+# AROS m68k Kickstart replacement ROMs (open source, legal - NOT commercial Kickstart)
+#
+# Provenance: extracted from /usr/share/fs-uae/fs-uae.dat, shipped inside the
+# Ubuntu package fs-uae 3.1.66-2build2 (questing/universe). These are the AROS
+# Amiga m68k ROM replacement images that FS-UAE bundles as its built-in
+# kickstart fallback. AROS is open source (AROS Public License / APL, based on
+# MPL). File dates inside the archive: 2021-12-19 (FS-UAE 3.1.x data bundle).
+#
+# Extraction command:
+#   unzip -j /usr/share/fs-uae/fs-uae.dat \
+#     'share/fs-uae/aros-amiga-m68k-rom.bin' 'share/fs-uae/aros-amiga-m68k-ext.bin'
+#
+# Sizes: both exactly 524288 bytes (512 KB).
+#
+# SHA-1 (format used by the server-side ROM clustering DB, rom_fingerprint_db.py):
+4623642671375e16f99bd3243c3b2a3c4ba92275  aros-amiga-m68k-rom.bin
+1e9473fb978d51196e4fe593932274a3743926c3  aros-amiga-m68k-ext.bin
+
+# MD5 (secondary):
+# 69d89ed24320b4bb2948505abdc89427  aros-amiga-m68k-rom.bin
+# 74103ef33ba14f180d5327a5f58fe425  aros-amiga-m68k-ext.bin
+
+# Clustering note (checked 2026-07-01): neither SHA-1 appears in
+# ~/tmp_rustchain/rom_fingerprint_db.py (there are no AROS entries at all).
+# So the server will treat this as an unknown/unique ROM on first report.
+# If 3+ miners ever report this same hash, rom_clustering_server.py flags them
+# as rom_clustering. For the RustChain-on-Amiga test this is the EXPECTED and
+# desired behavior: the emulated amiga-fsuae-scott miner should end up flagged
+# or minimal-reward. Consider adding these two hashes to the known-emulator ROM
+# DB as "aros_replacement" entries (draft only, per SPEC hard rules).

@@ -1,0 +1,20 @@
+# Boot test config for the PUBLIC distro HDF (used by boot_test.sh).
+# Drive 0: throwaway COPY of images/RustChainAmiga.hdf with S/Test-Hooks
+#          injected (the shipped image has no test hooks).
+# Drive 1: host dir test/shared mounted as volume "Shared" for log capture.
+[fs-uae]
+amiga_model = A4000/040
+kickstart_file = /home/scott/rustchain-amiga/emu/roms/aros-amiga-m68k-rom.bin
+kickstart_ext_file = /home/scott/rustchain-amiga/emu/roms/aros-amiga-m68k-ext.bin
+chip_memory = 2048
+zorro_iii_memory = 32768
+bsdsocket_library = 1
+uae_a2065 = slirp
+hard_drive_0 = /home/scott/rustchain-amiga/distro/test/RustChainAmiga-test.hdf
+hard_drive_1 = /home/scott/rustchain-amiga/distro/test/shared
+hard_drive_1_label = Shared
+fullscreen = 0
+initial_input_grab = 0
+automatic_input_grab = 0
+floppy_drive_volume = 0
+screenshots_output_dir = /home/scott/rustchain-amiga/distro/test/screenshots

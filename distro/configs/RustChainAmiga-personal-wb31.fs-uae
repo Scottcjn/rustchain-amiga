@@ -1,0 +1,22 @@
+# RustChain Amiga Edition - PERSONAL tier boot config (Workbench 3.1)
+# For Scott's machine only. Boots the personal WB3.1 image built by
+# personal/make_personal_wb31.sh.
+#
+# BLOCKED until a Kickstart 3.1 ROM is available in DECRYPTED form:
+# the ROMs in emu/roms/licensed/rom/ are Cloanto-encrypted and there is no
+# rom.key on this machine yet. When it exists, point kickstart_file at the
+# decrypted amiga-os-310-a4000.rom (FS-UAE can also use rom.key placed next
+# to the encrypted ROM).
+[fs-uae]
+amiga_model = A4000/040
+# TODO(rom.key): decrypted Kickstart 3.1 A4000 ROM required here
+kickstart_file = ../../emu/roms/licensed/rom/amiga-os-310-a4000.rom
+hard_drive_0 = ../personal/RustChainAmiga-WB31-PERSONAL-DO-NOT-DISTRIBUTE.hdf
+chip_memory = 2048
+zorro_iii_memory = 32768
+bsdsocket_library = 1
+uae_a2065 = slirp
+fullscreen = 0
+initial_input_grab = 0
+automatic_input_grab = 0
+floppy_drive_volume = 0
