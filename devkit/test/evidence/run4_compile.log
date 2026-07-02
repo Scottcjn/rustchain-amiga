@@ -1,0 +1,5 @@
+=== step1 vbccm68k (compile C to asm) ===
+=== step2 vasmm68k_mot (assemble to hunk object) ===
+=== step3 vlink (link hunk executable) ===
+=== pipeline done, running SYS:hello ===
+=== hello ran ===

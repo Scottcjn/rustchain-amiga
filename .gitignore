@@ -14,3 +14,6 @@ python/bin/upython-min
 fsuae_run*.log
 screenshot_run*.png
 distro/test/shot/
+devkit/Development/
+devkit/downloads/
+devkit/extras/mathieee/build/

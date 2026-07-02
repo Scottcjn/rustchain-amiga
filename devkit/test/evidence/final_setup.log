@@ -1,0 +1,5 @@
+=== env setup (devsetup: ENV: T: vbcc: assigns) ===
+assigned ENV: -> RAM:Env
+assigned T: -> RAM:T
+assigned vbcc: -> DH1:vbcc
+=== env setup done ===

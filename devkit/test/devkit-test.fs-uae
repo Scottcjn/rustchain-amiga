@@ -1,0 +1,38 @@
+# RustChain Amiga devkit test rig (Phase 3)
+# Copy of emu/fsuae/rustchain.fs-uae with the drives repointed:
+#   DH0: (boot, SYS:) -> devkit/test/shared/   (own startup-sequence + hello.c)
+#   DH1:              -> devkit/Development/   (the vbcc drawer under test)
+# The original config and shared/ are NOT touched.
+#
+# Run headless:
+#   timeout 240 xvfb-run --auto-servernum -s "-screen 0 1280x1024x24" \
+#       fs-uae /home/scott/rustchain-amiga/devkit/test/devkit-test.fs-uae
+[fs-uae]
+
+# --- Model (same as the working rig) ---
+amiga_model = A4000/040
+
+# --- Kickstart: AROS m68k replacement (open source, see emu/roms/HASHES.txt) ---
+kickstart_file = /home/scott/rustchain-amiga/emu/roms/aros-amiga-m68k-rom.bin
+kickstart_ext_file = /home/scott/rustchain-amiga/emu/roms/aros-amiga-m68k-ext.bin
+
+# --- Memory ---
+# vbccm68k is a real compiler; give it the same 2 MB chip + 32 MB Z3 fast.
+chip_memory = 2048
+zorro_iii_memory = 32768
+
+# --- Hard drives ---
+# Boot volume: this test's own shared dir with its own S/startup-sequence.
+hard_drive_0 = /home/scott/rustchain-amiga/devkit/test/shared
+hard_drive_0_label = DevTest
+# Second volume: the Development drawer under test (mounted read-write;
+# the guest only reads from it).
+hard_drive_1 = /home/scott/rustchain-amiga/devkit/Development
+hard_drive_1_label = Development
+
+# --- Convenience ---
+fullscreen = 0
+initial_input_grab = 0
+automatic_input_grab = 0
+floppy_drive_volume = 0
+screenshots_output_dir = /home/scott/rustchain-amiga/devkit/test/screenshots

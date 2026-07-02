@@ -1,0 +1,5 @@
+RUSTCHAIN-DEVKIT-MARKER: hello from vbcc, compiled natively on the Amiga
+fib(20)=6765 (expect 6765)
+sum(1..1000)=500500 (expect 500500)
+sizeof(int)=4 sizeof(long)=4
+COMPUTATION-OK
