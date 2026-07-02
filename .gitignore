@@ -5,3 +5,6 @@ shared/rustchain_amiga
 *.hdf
 *.adf
 distro/personal/
+emu/roms/kickstart/
+emu/roms/af11/
+distro/personal/testshared/
