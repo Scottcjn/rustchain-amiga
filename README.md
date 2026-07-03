@@ -18,6 +18,12 @@ ROM (Amiga Forever). This image is built locally and never redistributed.
 
 ![Workbench 3.1 on a real Kickstart](media/03-workbench31-real-kickstart.png)
 
+Claude Code's tool-use loop, running on that same real Workbench 3.1 / real
+Kickstart 3.1. Claude answers over the proxy, then writes a file on the Amiga's
+own volume through its `write_file` tool. See `claude/`.
+
+![Claude Code running on real Workbench 3.1](claude/screenshots/claude-on-workbench31-cli.png)
+
 ## What is in here
 
 | Dir | What it is |
@@ -27,6 +33,7 @@ ROM (Amiga Forever). This image is built locally and never redistributed.
 | `tools/` | rtcwallet (balance and epoch), rtcfetch (HTTP fetch), rtctop (network status table). All AmigaShell CLI tools. |
 | `ports/` | amiports, a MacPorts-style package manager. Portfile recipes, a host build harness, and an on-Amiga `amiport install` client that fetches, SHA-1 verifies, and extracts packages over HTTP. |
 | `java/` | mjvm, a micro-JVM in ANSI C that runs javac-produced class files on AmigaOS. Plus an evidence-backed feasibility report on why GCJ was a dead end. |
+| `claude/` | Claude on the Amiga: a native C client for the Anthropic Messages API with a real tool-use loop. Chats, and reads/writes files and runs AmigaDOS commands on the Amiga at Claude's instruction, behind a confirm gate. AmiSSL direct HTTPS or a host proxy. Runs on real Workbench 3.1 and AROS m68k. See `claude/README.md`. |
 | `distro/` | The distribution pipeline. Builds a bootable public HDF on the open-source AROS ROM, a rustchain-tools.lha pack for stock Workbench, and a personal Workbench 3.1 variant for people who own the real thing. |
 | `emu/` | FS-UAE environment: configs, AROS ROM hashes, boot evidence. |
 | `docs/` | The AmigaOS upgrade path: 3.2.3 classic, 4.1 Final Edition under QEMU, AROS for free. |

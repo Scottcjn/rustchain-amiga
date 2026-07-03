@@ -8,10 +8,17 @@ gate.
 
 ## It runs
 
-Chat plus the tool-use loop, on an AROS m68k boot in FS-UAE. Claude answers,
-then writes a file on the Amiga's own volume through the `write_file` tool:
+On real Workbench 3.1 with a genuine Commodore Kickstart 3.1 ROM (Amiga
+Forever), booted in FS-UAE. Claude answers over the proxy, then writes a file
+on the Amiga's own volume through the `write_file` tool. The banner is the real
+Kickstart ("Copyright (c) 1985-1993 Commodore-Amiga, Inc."), not AROS:
 
-![Claude Code running on a 68k Amiga](screenshots/claude-on-amiga-cli.png)
+![Claude Code running on real Workbench 3.1](screenshots/claude-on-workbench31-cli.png)
+
+It also runs on the open-source AROS m68k ROM (what the automated test uses,
+since AROS is redistributable and real Kickstart ROMs are not):
+
+![Claude Code running on AROS m68k](screenshots/claude-on-amiga-cli.png)
 
 (`type: object not found` is only because `type` is not in the bare AROS ROM
 shell. The file was written; the tool-use loop reported it, and the file is
