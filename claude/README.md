@@ -172,3 +172,19 @@ See `test/EVIDENCE.md` for a captured run.
 - AmiSSL mode: key stays on the Amiga, TLS verified by default.
 - Destructive tools gated `y/N`, default No.
 - Nothing here touches the production RustChain nodes.
+
+## Testing with OpenRouter (cheap, no Anthropic key needed)
+
+The host proxy can route through OpenRouter so you can exercise the full client
+protocol against a cheap real model (Haiku or Sonnet) without an Anthropic key.
+The proxy translates Anthropic Messages <-> OpenAI chat/completions in both
+directions, including the tool-use round trip, so the Amiga client is unchanged.
+
+    export OPENROUTER_API_KEY=sk-or-...            # your OpenRouter key
+    export OPENROUTER_MODEL=anthropic/claude-haiku-4.5   # or anthropic/claude-sonnet-4.5
+    python3 proxy/claude_amiga_proxy.py --selftest      # one real round-trip
+    python3 proxy/claude_amiga_proxy.py --bind 0.0.0.0 --port 8790   # serve the Amiga
+
+Then on the Amiga: `claude "your prompt" --proxy <host>:8790`. The key stays on
+the host; the Amiga never sees it. Verified working end to end (chat + tool-use)
+against anthropic/claude-haiku-4.5 via OpenRouter.
