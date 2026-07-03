@@ -24,6 +24,11 @@ own volume through its `write_file` tool. See `claude/`.
 
 ![Claude Code running on real Workbench 3.1](claude/screenshots/claude-on-workbench31-cli.png)
 
+And because no Amiga repo is complete without it, the Boing Ball, rendered by
+native m68k code (`boing/`):
+
+![Boing Ball on the Amiga](boing/screenshots/boing-ball.png)
+
 ## What is in here
 
 | Dir | What it is |
@@ -34,6 +39,7 @@ own volume through its `write_file` tool. See `claude/`.
 | `ports/` | amiports, a MacPorts-style package manager. Portfile recipes, a host build harness, and an on-Amiga `amiport install` client that fetches, SHA-1 verifies, and extracts packages over HTTP. |
 | `java/` | mjvm, a micro-JVM in ANSI C that runs javac-produced class files on AmigaOS. Plus an evidence-backed feasibility report on why GCJ was a dead end. |
 | `claude/` | Claude on the Amiga: a native C client for the Anthropic Messages API with a real tool-use loop. Chats, and reads/writes files and runs AmigaDOS commands on the Amiga at Claude's instruction, behind a confirm gate. AmiSSL direct HTTPS or a host proxy. Runs on real Workbench 3.1 and AROS m68k. See `claude/README.md`. |
+| `boing/` | The Boing Ball as native m68k code. Custom screen, purple grid, curved-checker sphere, shadow. graphics.library plus intuition.library. Because obviously. |
 | `distro/` | The distribution pipeline. Builds a bootable public HDF on the open-source AROS ROM, a rustchain-tools.lha pack for stock Workbench, and a personal Workbench 3.1 variant for people who own the real thing. |
 | `emu/` | FS-UAE environment: configs, AROS ROM hashes, boot evidence. |
 | `docs/` | The AmigaOS upgrade path: 3.2.3 classic, 4.1 Final Edition under QEMU, AROS for free. |
