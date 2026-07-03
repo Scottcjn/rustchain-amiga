@@ -6,6 +6,33 @@ Amiga: a small chat client that can also read and write files and run commands
 on the Amiga's own filesystem, at Claude's instruction, behind a confirmation
 gate.
 
+## It runs
+
+Chat plus the tool-use loop, on an AROS m68k boot in FS-UAE. Claude answers,
+then writes a file on the Amiga's own volume through the `write_file` tool:
+
+![Claude Code running on a 68k Amiga](screenshots/claude-on-amiga-cli.png)
+
+(`type: object not found` is only because `type` is not in the bare AROS ROM
+shell. The file was written; the tool-use loop reported it, and the file is
+there on the volume.)
+
+## Prior art and what is actually new here
+
+Being accurate about "first": a native Amiga app already talks to Claude.
+[AmigaGPT](https://github.com/sacredbanana/AmigaGPT) is a multi-provider AI
+client for AmigaOS 3.x/4.1/MorphOS that supports Anthropic Claude for **chat**.
+So this is **not** the first native Claude client on the Amiga.
+
+What is new here, as far as any public prior art we could find: an **agentic
+tool-use loop** on a classic 68k Amiga, where Claude decides to call
+`read_file` / `write_file` / `run_command` and the Amiga executes those against
+its own filesystem and AmigaDOS shell, then feeds the results back. That is the
+"Claude Code" behaviour (an agent acting on the machine), not just chat. We
+have not found another public example of a tool-calling LLM manipulating a 68k
+Amiga. We are not claiming an absolute first; we are saying we could not find
+prior art for this specific thing.
+
 ## Honest scope (what this is and is not)
 
 - This is **not** the Node/TypeScript Claude Code app. That does not run on a
