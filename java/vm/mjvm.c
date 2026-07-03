@@ -199,18 +199,22 @@ static void utf8_print(class_t *C, u2 utf8_idx)
 }
 
 /* ---- class file parsing -------------------------------------------------- */
+/* bounds notes: p is always kept <= end, so (u4)(end - p) is the number of
+   bytes still available. Comparing that count against a length avoids the
+   pointer-overflow trap of "p + len > end" on ILP32 m68k, where a huge len
+   can wrap the pointer back below end and slip past the check. */
 static const u1 *skip_attributes(class_t *C, const u1 *p, const u1 *end)
 {
     u2 count, i;
     (void)C;
-    if (p + 2 > end) die("truncated class file (attribute count)");
+    if (end - p < 2) die("truncated class file (attribute count)");
     count = rd_u2(p); p += 2;
     for (i = 0; i < count; i++) {
         u4 len;
-        if (p + 6 > end) die("truncated class file (attribute header)");
+        if (end - p < 6) die("truncated class file (attribute header)");
         len = rd_u4(p + 2);
         p += 6;
-        if (p + len > end) die("truncated class file (attribute body)");
+        if (len > (u4)(end - p)) die("truncated class file (attribute body)");
         p += len;
     }
     return p;
@@ -220,15 +224,19 @@ static void parse_code_attr(class_t *C, method_t *m, const u1 *p, const u1 *end)
 {
     u2 exc_count;
     (void)C;
+    if (end - p < 8) die("truncated Code attribute (header)");
     m->max_stack  = rd_u2(p);
     m->max_locals = rd_u2(p + 2);
     m->code_len   = rd_u4(p + 4);
     m->code       = p + 8;
+    if (m->code_len > (u4)(end - (p + 8)))
+        die("truncated Code attribute (code longer than attribute)");
     p = m->code + m->code_len;
-    if (p > end) die("truncated Code attribute");
+    if (end - p < 2) die("truncated Code attribute (exception count)");
     exc_count = rd_u2(p); p += 2;
+    if ((u4)exc_count * 8 > (u4)(end - p))
+        die("truncated Code attribute (exception table)");
     p += (u4)exc_count * 8;      /* exception table ignored (no exceptions) */
-    if (p > end) die("truncated Code attribute (exception table)");
     /* code attribute's own attributes (StackMapTable etc.) ignored */
 }
 
@@ -271,24 +279,33 @@ static void class_load(class_t *C, const char *path)
         e->tag = *p++;
         switch (e->tag) {
         case CP_UTF8:
+            if (end - p < 2) die("truncated constant pool (utf8 length)");
             e->utf8_len = rd_u2(p);
+            if ((u4)e->utf8_len > (u4)(end - (p + 2)))
+                die("truncated constant pool (utf8 body)");
             e->utf8 = p + 2;
             p += 2 + e->utf8_len;
             break;
         case CP_INTEGER:
+            if (end - p < 4) die("truncated constant pool (integer)");
             e->ival = rd_s4(p); p += 4; break;
         case CP_FLOAT:
+            if (end - p < 4) die("truncated constant pool (float)");
             p += 4; break;                     /* parsed, unusable */
         case CP_LONG:
         case CP_DOUBLE:
+            if (end - p < 8) die("truncated constant pool (long/double)");
             p += 8; i++; break;                /* takes two cp slots */
         case CP_CLASS: case CP_STRING: case CP_METHODTYPE:
         case CP_MODULE: case CP_PACKAGE:
+            if (end - p < 2) die("truncated constant pool (index entry)");
             e->a = rd_u2(p); p += 2; break;
         case CP_FIELDREF: case CP_METHODREF: case CP_IFACEMETHODREF:
         case CP_NAMEANDTYPE: case CP_DYNAMIC: case CP_INVOKEDYNAMIC:
+            if (end - p < 4) die("truncated constant pool (ref entry)");
             e->a = rd_u2(p); e->b = rd_u2(p + 2); p += 4; break;
         case CP_METHODHANDLE:
+            if (end - p < 3) die("truncated constant pool (methodhandle)");
             e->a = *p; e->b = rd_u2(p + 1); p += 3; break;
         default:
             die("unknown constant pool tag");
@@ -297,20 +314,28 @@ static void class_load(class_t *C, const char *path)
     }
 
     /* access flags, this/super class */
+    if (end - p < 6) die("truncated class file (this/super class)");
     C->this_class = rd_u2(p + 2);
     p += 6;
 
     /* interfaces */
-    count = rd_u2(p); p += 2 + (u4)count * 2;
+    if (end - p < 2) die("truncated class file (interface count)");
+    count = rd_u2(p); p += 2;
+    if ((u4)count * 2 > (u4)(end - p))
+        die("truncated class file (interface table)");
+    p += (u4)count * 2;
 
     /* fields: skipped entirely (no field support) */
+    if (end - p < 2) die("truncated class file (field count)");
     count = rd_u2(p); p += 2;
     for (i = 0; i < count; i++) {
+        if (end - p < 6) die("truncated class file (field entry)");
         p += 6;
         p = skip_attributes(C, p, end);
     }
 
     /* methods */
+    if (end - p < 2) die("truncated class file (method count)");
     C->method_count = rd_u2(p); p += 2;
     C->methods = (method_t *)calloc(C->method_count ? C->method_count : 1,
                                     sizeof(method_t));
@@ -318,19 +343,24 @@ static void class_load(class_t *C, const char *path)
     for (i = 0; i < C->method_count; i++) {
         method_t *m = &C->methods[i];
         u2 acount, a;
+        if (end - p < 6) die("truncated class file (method entry)");
         m->flags    = rd_u2(p);
         m->name_idx = rd_u2(p + 2);
         m->desc_idx = rd_u2(p + 4);
         p += 6;
+        if (end - p < 2) die("truncated class file (method attr count)");
         acount = rd_u2(p); p += 2;
         for (a = 0; a < acount; a++) {
-            u2 aname = rd_u2(p);
-            u4 alen  = rd_u4(p + 2);
+            u2 aname;
+            u4 alen;
+            if (end - p < 6) die("truncated class file (method attr header)");
+            aname = rd_u2(p);
+            alen  = rd_u4(p + 2);
             p += 6;
+            if (alen > (u4)(end - p)) die("truncated method attribute");
             if (utf8_eq(C, aname, "Code"))
                 parse_code_attr(C, m, p, p + alen);
             p += alen;
-            if (p > end) die("truncated method attribute");
         }
     }
     /* class attributes: not needed */
@@ -465,6 +495,28 @@ static void invoke_static(class_t *C, u2 mref_idx, slot *stack, int *sp)
     }
 }
 
+/* the instruction starting at pc needs nbytes total (opcode + operands);
+   every byte in [pc, pc + nbytes) must be inside the method's code array.
+   Written to be safe against unsigned wrap: check the length first, then
+   the position. Any out-of-range operand is a controlled fatal error, not
+   a read past the end of the code buffer. */
+static void code_need(const method_t *m, u4 pc, u4 nbytes)
+{
+    if (nbytes > m->code_len || pc > m->code_len - nbytes)
+        die("truncated bytecode (operand runs past end of code)");
+}
+
+/* Bounds-checked local-variable access. A corrupt or hostile class file can
+   carry a local index (in iload/istore/iinc/wide) larger than max_locals;
+   without this the interpreter would read or write past the locals frame.
+   Returns an lvalue pointer so the same guard serves loads and stores. */
+static slot *local_ref(slot *locals, const method_t *m, u4 idx)
+{
+    if (idx >= (u4)m->max_locals)
+        die("local variable index out of range");
+    return &locals[idx];
+}
+
 static void run(class_t *C, method_t *m, slot *args, int nargs,
                 slot *retval, int *has_ret)
 {
@@ -483,11 +535,13 @@ static void run(class_t *C, method_t *m, slot *args, int nargs,
     if (nargs > m->max_locals) die("more args than locals");
     if (nargs > 0) memcpy(locals, args, (size_t)nargs * sizeof(slot));
 
-#define PUSH(v)  do { if (sp > (int)m->max_stack) die("operand stack overflow"); \
+#define PUSH(v)  do { if (sp >= (int)m->max_stack) die("operand stack overflow"); \
                       stack[sp++] = (slot)(v); } while (0)
 #define POP()    (sp > 0 ? stack[--sp] : (die("operand stack underflow"), 0u))
 #define IPOP()   ((s4)POP())
-#define BRANCH16() do { pc = (u4)((s4)pc + rd_s2(code + pc + 1)); } while (0)
+#define LGET(i)  (*local_ref(locals, m, (u4)(i)))
+#define BRANCH16() do { code_need(m, pc, 3); \
+                        pc = (u4)((s4)pc + rd_s2(code + pc + 1)); } while (0)
 
     for (;;) {
         u1 op;
@@ -498,33 +552,42 @@ static void run(class_t *C, method_t *m, slot *args, int nargs,
         case 1: PUSH(REF_NULL); pc++; break;                    /* aconst_null */
         case 2: case 3: case 4: case 5: case 6: case 7: case 8: /* iconst_m1..5 */
             PUSH((s4)op - 3); pc++; break;
-        case 16: PUSH((s4)(signed char)code[pc + 1]); pc += 2; break; /* bipush */
-        case 17: PUSH(rd_s2(code + pc + 1)); pc += 3; break;          /* sipush */
+        case 16:                                                /* bipush */
+            code_need(m, pc, 2);
+            PUSH((s4)(signed char)code[pc + 1]); pc += 2; break;
+        case 17:                                                /* sipush */
+            code_need(m, pc, 3);
+            PUSH(rd_s2(code + pc + 1)); pc += 3; break;
         case 18: case 19: {                                     /* ldc, ldc_w */
-            u2 idx = (op == 18) ? code[pc + 1] : rd_u2(code + pc + 1);
-            cp_t *e = cp_get(C, idx, 0, "ldc");
+            u2 idx;
+            cp_t *e;
+            code_need(m, pc, (op == 18) ? 2 : 3);
+            idx = (op == 18) ? code[pc + 1] : rd_u2(code + pc + 1);
+            e = cp_get(C, idx, 0, "ldc");
             if (e->tag == CP_INTEGER) PUSH(e->ival);
             else if (e->tag == CP_STRING) PUSH(REF_STR_TAG | e->a);
             else die("ldc of unsupported constant (float/long/double/class?)");
             pc += (op == 18) ? 2 : 3;
             break; }
         case 21: case 25:                                       /* iload, aload */
-            PUSH(locals[code[pc + 1]]); pc += 2; break;
+            code_need(m, pc, 2);
+            PUSH(LGET(code[pc + 1])); pc += 2; break;
         case 26: case 27: case 28: case 29:                     /* iload_0..3 */
-            PUSH(locals[op - 26]); pc++; break;
+            PUSH(LGET(op - 26)); pc++; break;
         case 42: case 43: case 44: case 45:                     /* aload_0..3 */
-            PUSH(locals[op - 42]); pc++; break;
+            PUSH(LGET(op - 42)); pc++; break;
         case 46: {                                              /* iaload */
             s4 idx = IPOP(); int a = array_deref(POP());
             if (idx < 0 || idx >= g_arr_len[a])
                 die("ArrayIndexOutOfBoundsException");
             PUSH(g_arr[a][idx]); pc++; break; }
         case 54: case 58:                                       /* istore, astore */
-            locals[code[pc + 1]] = POP(); pc += 2; break;
+            code_need(m, pc, 2);
+            LGET(code[pc + 1]) = POP(); pc += 2; break;
         case 59: case 60: case 61: case 62:                     /* istore_0..3 */
-            locals[op - 59] = POP(); pc++; break;
+            LGET(op - 59) = POP(); pc++; break;
         case 75: case 76: case 77: case 78:                     /* astore_0..3 */
-            locals[op - 75] = POP(); pc++; break;
+            LGET(op - 75) = POP(); pc++; break;
         case 79: {                                              /* iastore */
             s4 val = IPOP(); s4 idx = IPOP(); int a = array_deref(POP());
             if (idx < 0 || idx >= g_arr_len[a])
@@ -577,8 +640,9 @@ static void run(class_t *C, method_t *m, slot *args, int nargs,
         case 128: { s4 b = IPOP(), a = IPOP(); PUSH(a | b); pc++; break; } /* ior  */
         case 130: { s4 b = IPOP(), a = IPOP(); PUSH(a ^ b); pc++; break; } /* ixor */
         case 132:                                               /* iinc */
-            locals[code[pc + 1]] =
-                (slot)((s4)locals[code[pc + 1]] + (signed char)code[pc + 2]);
+            code_need(m, pc, 3);
+            LGET(code[pc + 1]) =
+                (slot)((s4)LGET(code[pc + 1]) + (signed char)code[pc + 2]);
             pc += 3; break;
         case 145: { s4 a = IPOP();                              /* i2b */
             PUSH((s4)(signed char)(a & 0xff)); pc++; break; }
@@ -611,20 +675,35 @@ static void run(class_t *C, method_t *m, slot *args, int nargs,
         case 167: BRANCH16(); break;                            /* goto */
         case 170: {                                             /* tableswitch */
             u4 base = (pc + 4) & ~3u;
-            s4 def  = rd_s4(code + base);
-            s4 lo   = rd_s4(code + base + 4);
-            s4 hi   = rd_s4(code + base + 8);
-            s4 v    = IPOP();
+            s4 def, lo, hi, v;
+            u4 count;
+            /* header: default + low + high = 12 bytes past the pad */
+            if (base > m->code_len || m->code_len - base < 12)
+                die("truncated tableswitch header");
+            def = rd_s4(code + base);
+            lo  = rd_s4(code + base + 4);
+            hi  = rd_s4(code + base + 8);
+            if (hi < lo) die("bad tableswitch (high < low)");
+            count = (u4)hi - (u4)lo + 1;        /* number of jump offsets */
+            if (count == 0 || count > (m->code_len - (base + 12)) / 4)
+                die("truncated tableswitch table");
+            v = IPOP();
             if (v < lo || v > hi) pc = (u4)((s4)pc + def);
             else pc = (u4)((s4)pc +
                            rd_s4(code + base + 12 + (u4)(v - lo) * 4));
             break; }
         case 171: {                                             /* lookupswitch */
             u4 base = (pc + 4) & ~3u;
-            s4 def  = rd_s4(code + base);
-            s4 n    = rd_s4(code + base + 4);
-            s4 v    = IPOP();
-            s4 i, off = def;
+            s4 def, n, v, i, off;
+            /* header: default + npairs = 8 bytes past the pad */
+            if (base > m->code_len || m->code_len - base < 8)
+                die("truncated lookupswitch header");
+            def = rd_s4(code + base);
+            n   = rd_s4(code + base + 4);
+            if (n < 0 || (u4)n > (m->code_len - (base + 8)) / 8)
+                die("truncated lookupswitch table");
+            v   = IPOP();
+            off = def;
             for (i = 0; i < n; i++) {
                 if (rd_s4(code + base + 8 + (u4)i * 8) == v) {
                     off = rd_s4(code + base + 12 + (u4)i * 8);
@@ -640,7 +719,9 @@ static void run(class_t *C, method_t *m, slot *args, int nargs,
             *has_ret = 0;
             free(locals); free(stack); depth--; return;
         case 178: {                                             /* getstatic */
-            cp_t *fref = cp_get(C, rd_u2(code + pc + 1), CP_FIELDREF, "getstatic");
+            cp_t *fref;
+            code_need(m, pc, 3);
+            fref = cp_get(C, rd_u2(code + pc + 1), CP_FIELDREF, "getstatic");
             cp_t *cls  = cp_get(C, fref->a, CP_CLASS, "getstatic class");
             cp_t *nat  = cp_get(C, fref->b, CP_NAMEANDTYPE, "getstatic nat");
             if (utf8_eq(C, cls->a, "java/lang/System") &&
@@ -653,11 +734,13 @@ static void run(class_t *C, method_t *m, slot *args, int nargs,
                 die("getstatic: only java.lang.System.out/err supported");
             pc += 3; break; }
         case 182: {                                             /* invokevirtual */
-            cp_t *mref = cp_get(C, rd_u2(code + pc + 1), CP_METHODREF,
-                                "invokevirtual");
-            cp_t *cls  = cp_get(C, mref->a, CP_CLASS, "iv class");
-            cp_t *nat  = cp_get(C, mref->b, CP_NAMEANDTYPE, "iv nat");
+            cp_t *mref, *cls, *nat;
             int is_println, is_print;
+            code_need(m, pc, 3);
+            mref = cp_get(C, rd_u2(code + pc + 1), CP_METHODREF,
+                          "invokevirtual");
+            cls  = cp_get(C, mref->a, CP_CLASS, "iv class");
+            nat  = cp_get(C, mref->b, CP_NAMEANDTYPE, "iv nat");
             if (!utf8_eq(C, cls->a, "java/io/PrintStream"))
                 die("invokevirtual: only java.io.PrintStream print/println "
                     "supported (no objects in this VM)");
@@ -689,11 +772,15 @@ static void run(class_t *C, method_t *m, slot *args, int nargs,
             }
             pc += 3; break; }
         case 184:                                               /* invokestatic */
+            code_need(m, pc, 3);
             invoke_static(C, rd_u2(code + pc + 1), stack, &sp);
             pc += 3; break;
         case 188: {                                             /* newarray */
-            u1 atype = code[pc + 1];
-            s4 count = IPOP();
+            u1 atype;
+            s4 count;
+            code_need(m, pc, 2);
+            atype = code[pc + 1];
+            count = IPOP();
             if (atype != 10)   /* T_INT */
                 die("newarray: only int[] supported");
             PUSH(array_new(count));
@@ -702,18 +789,24 @@ static void run(class_t *C, method_t *m, slot *args, int nargs,
             int a = array_deref(POP());
             PUSH(g_arr_len[a]); pc++; break; }
         case 196: {                                             /* wide */
-            u1 wop = code[pc + 1];
-            u2 idx = rd_u2(code + pc + 2);
-            if (wop == 21 || wop == 25) { PUSH(locals[idx]); pc += 4; }
-            else if (wop == 54 || wop == 58) { locals[idx] = POP(); pc += 4; }
+            u1 wop;
+            u2 idx;
+            code_need(m, pc, 4);
+            wop = code[pc + 1];
+            idx = rd_u2(code + pc + 2);
+            if (wop == 21 || wop == 25) { PUSH(LGET(idx)); pc += 4; }
+            else if (wop == 54 || wop == 58) { LGET(idx) = POP(); pc += 4; }
             else if (wop == 132) {
-                locals[idx] = (slot)((s4)locals[idx] + rd_s2(code + pc + 4));
+                code_need(m, pc, 6);
+                LGET(idx) = (slot)((s4)LGET(idx) + rd_s2(code + pc + 4));
                 pc += 6;
             } else die_op("unsupported wide opcode", wop, (int)pc);
             break; }
         case 198: { if (POP() == REF_NULL) BRANCH16(); else pc += 3; break; }
         case 199: { if (POP() != REF_NULL) BRANCH16(); else pc += 3; break; }
-        case 200: pc = (u4)((s4)pc + rd_s4(code + pc + 1)); break; /* goto_w */
+        case 200:                                               /* goto_w */
+            code_need(m, pc, 5);
+            pc = (u4)((s4)pc + rd_s4(code + pc + 1)); break;
         default:
             die_op("unsupported opcode (outside the mjvm subset)",
                    op, (int)pc);
@@ -722,6 +815,7 @@ static void run(class_t *C, method_t *m, slot *args, int nargs,
 #undef PUSH
 #undef POP
 #undef IPOP
+#undef LGET
 #undef BRANCH16
 }
 

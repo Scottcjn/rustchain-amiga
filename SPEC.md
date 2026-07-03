@@ -96,3 +96,29 @@ name is Scott's call). Dir: ports/. Design pillars:
 - Bootstrap ladder doctrine: native vbcc is rung 1; ports formalize backporting newer compilers rung by rung.
 Acceptance: amiport install of at least one real package works INSIDE FS-UAE from an HTTP repo served by the
 host; repo layout documented so it can later live on node 1 nginx or GitHub releases.
+
+## PHASE 5 — Claude on the Amiga (added 2026-07-02, Scott's directive: "port our custom claude code non node to amiga")
+NOT the Node/TS Claude Code (impossible on 68k). A native C Anthropic Messages API CLIENT for classic AmigaOS,
+with a real tool-use loop. Dir: claude/.
+Architecture (SELF-CONTAINED via AmiSSL — primary; proxy = optional fallback):
+- PRIMARY: claude/client links AmiSSL (AmigaOS OpenSSL port, SDK at python/src/amissl-sdk/) and does HTTPS
+  DIRECTLY to api.anthropic.com:443. No lab required. Key on-device (ENV:/config, never logged). Same
+  self-contained TLS approach used for the G4. Needs AmiSSL installed (full AROS/WB3.1 tier; AmiSSL is
+  open-source, bundle it in the distro).
+- FALLBACK (optional, --proxy): for bare-ROM AROS with no TLS lib:
+- claude/proxy/claude_amiga_proxy.py — HOST-side bridge (python3 stdlib). Listens plain HTTP on the LAN,
+  receives {prompt|messages, tools_result} from the Amiga, calls api.anthropic.com over TLS with the real
+  key (ANTHROPIC_API_KEY or `ant auth print-credentials --access-token` + oauth beta header), returns the
+  assistant text + any tool_use blocks. The API KEY NEVER touches the Amiga. Model default claude-opus-4-8
+  (per claude-api skill), --model override; anthropic-version 2023-06-01.
+- claude/client/claude.c — on-Amiga C89 client (bsdsocket, vendor tools/common rtc_common HTTP+JSON helpers).
+  `claude "prompt"` one-shot; `claude -i` REPL in AmigaShell. Renders Claude's reply.
+- Tool-use loop (stretch): proxy relays tool_use blocks; the Amiga client executes them LOCALLY
+  (read_file via AmigaDOS Open/Read, write_file, run_command via Execute()) and sends tool_result back.
+  This is the "Claude Code" part — Claude acting on the Amiga's own filesystem. Gate destructive tools
+  behind a y/N prompt (honor the careful-engineering + tool-security doctrine).
+Runs on: full AmigaOS/AROS with bsdsocket (the personal WB3.1 tier now boots on the real Kickstart, or a
+full AROS install). Bare-ROM demo shows chat only.
+Acceptance: `claude "..."` inside FS-UAE returns a real Claude reply via the proxy (proof in a host-visible
+log); tool-use loop reads/writes at least one Amiga file on Claude's instruction, with the destructive-op gate.
+Hard rules: key stays host-side; nothing to prod nodes; no em-dashes; plain voice.

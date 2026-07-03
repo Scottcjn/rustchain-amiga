@@ -17,3 +17,9 @@ distro/test/shot/
 devkit/Development/
 devkit/downloads/
 devkit/extras/mathieee/build/
+claude/**/__pycache__/
+claude/test/shared/claude
+claude/client/bin/
+claude/client/host_test*
+claude/test/*.bak
+*.bak

@@ -19,8 +19,10 @@
  * <prefix>/installed.db as "name|version|sha1|filecount".
  *
  * Archives are .apak (uncompressed, big-endian u32 fields, see
- * ports/FORMAT.md). The download is streamed to disk and its SHA-1 is
- * computed on the fly, so a 1 MB package needs only a few KB of RAM.
+ * ports/FORMAT.md). The download lands in a temp file, is then read into
+ * one RAM buffer, SHA-1'd, and extracted from that same buffer, so the
+ * verified bytes are exactly the extracted bytes (no verify/extract race).
+ * Archives are capped at MAX_ARCHIVE_BYTES to bound that allocation.
  *
  * m68k rules: C89, no 64-bit math, no %lld (see vendor/rtc_common.h).
  *
@@ -51,6 +53,11 @@
 #define INDEX_CAP 65536L
 #define MAX_ARCHIVE_FILES 1000UL
 #define MAX_MEMBER_SIZE (8UL * 1024UL * 1024UL)
+/* the whole archive is read into one RAM buffer before it is verified and
+   extracted (see cmd_install), so cap it to keep a hostile server from
+   asking for a wild allocation. Spec packages are ~1MB; this leaves head
+   room without being unbounded. */
+#define MAX_ARCHIVE_BYTES (4UL * 1024UL * 1024UL)
 
 /* one parsed line of index.txt:
    name|version|archive|sha1|size|license|description */
@@ -117,7 +124,8 @@ static void delete_file(const char *path)
 #endif
 }
 
-/* archive member names: relative, '/' separated, no tricks */
+/* archive member names: relative, '/' separated, no tricks (FORMAT.md:
+   ASCII, no leading '/', no ':', no '\', no '..' segments) */
 static int name_is_safe(const char *name)
 {
     const char *p;
@@ -125,6 +133,9 @@ static int name_is_safe(const char *name)
     if (name[0] == '\0' || name[0] == '/')
         return 0;
     for (p = name; *p; p++) {
+        unsigned char c = (unsigned char)*p;
+        if (c < 0x20 || c >= 0x7f)   /* control or non-ASCII */
+            return 0;
         if (*p == ':' || *p == '\\')
             return 0;
     }
@@ -140,14 +151,41 @@ static int name_is_safe(const char *name)
     return 1;
 }
 
-static int read_u32(FILE *f, unsigned long *v)
+/* package names are a single path component (FORMAT.md: [a-z0-9-]); much
+   stricter than member names, no '/' at all. The name comes from the repo
+   index and is used as a directory component, so guard it before any path
+   is built from it. */
+static int pkg_name_is_safe(const char *name)
 {
-    unsigned char b[4];
+    const char *p;
 
-    if (fread(b, 1, 4, f) != 4)
+    if (name[0] == '\0')
         return 0;
-    *v = ((unsigned long)b[0] << 24) | ((unsigned long)b[1] << 16) |
-         ((unsigned long)b[2] << 8) | (unsigned long)b[3];
+    if (strstr(name, "..") != NULL)
+        return 0;
+    for (p = name; *p; p++) {
+        unsigned char c = (unsigned char)*p;
+        if (c < 0x20 || c == 0x7f)   /* control chars */
+            return 0;
+        if (c == '/' || c == ':' || c == '\\')
+            return 0;
+    }
+    return 1;
+}
+
+/* read a big-endian u32 from buf[*pos], advancing *pos; 0 if short.
+   Bounds are checked as "bytes remaining < 4" so a near-max *pos cannot
+   wrap the addition on ILP32 m68k. */
+static int buf_u32(const unsigned char *buf, unsigned long len,
+                   unsigned long *pos, unsigned long *v)
+{
+    unsigned long p = *pos;
+
+    if (p > len || len - p < 4)
+        return 0;
+    *v = ((unsigned long)buf[p] << 24) | ((unsigned long)buf[p + 1] << 16) |
+         ((unsigned long)buf[p + 2] << 8) | (unsigned long)buf[p + 3];
+    *pos = p + 4;
     return 1;
 }
 
@@ -313,59 +351,59 @@ static int cmd_info(const char *host, int port, const char *rpath,
     return 0;
 }
 
-/* extract an .apak file into destdir; returns file count or -1 */
-static long extract_apak(const char *apak_path, const char *destdir)
+/* extract an .apak archive held entirely in memory into destdir; returns
+   file count or -1. buf/buf_len are the exact bytes that were SHA-verified
+   by the caller, so parsing and extraction operate on the verified image
+   and there is no reopen-by-path window between verify and extract. */
+static long extract_apak(const unsigned char *buf, unsigned long buf_len,
+                         const char *destdir)
 {
-    static char copybuf[4096];
     static char name[256];
     static char dest[512];
     static char sub[512];
-    char magic[8];
-    FILE *f, *o;
-    unsigned long count, namelen, prot, size, left, i;
+    unsigned long pos = 0;
+    unsigned long count, namelen, prot, size, i;
     long done = 0;
 
-    f = fopen(apak_path, "rb");
-    if (!f) {
-        fprintf(stderr, "amiport: cannot reopen %s\n", apak_path);
-        return -1;
-    }
-
-    if (fread(magic, 1, 8, f) != 8 || memcmp(magic, "APAK0001", 8) != 0) {
+    if (buf_len < 8 || memcmp(buf, "APAK0001", 8) != 0) {
         fprintf(stderr, "amiport: not an APAK0001 archive\n");
-        fclose(f);
         return -1;
     }
-    if (!read_u32(f, &count) || count == 0 || count > MAX_ARCHIVE_FILES) {
+    pos = 8;
+    if (!buf_u32(buf, buf_len, &pos, &count) ||
+        count == 0 || count > MAX_ARCHIVE_FILES) {
         fprintf(stderr, "amiport: bad archive file count\n");
-        fclose(f);
         return -1;
     }
 
     for (i = 0; i < count; i++) {
         char *p;
+        FILE *o;
 
-        if (!read_u32(f, &namelen) || namelen == 0 ||
+        if (!buf_u32(buf, buf_len, &pos, &namelen) || namelen == 0 ||
             namelen >= sizeof(name)) {
             fprintf(stderr, "amiport: bad member name length\n");
-            fclose(f);
             return -1;
         }
-        if (fread(name, 1, namelen, f) != namelen) {
+        if (buf_len - pos < namelen) {
             fprintf(stderr, "amiport: truncated archive\n");
-            fclose(f);
             return -1;
         }
+        memcpy(name, buf + pos, (size_t)namelen);
+        pos += namelen;
         name[namelen] = '\0';
         if (!name_is_safe(name)) {
             fprintf(stderr, "amiport: unsafe member name '%s'\n", name);
-            fclose(f);
             return -1;
         }
-        if (!read_u32(f, &prot) || !read_u32(f, &size) ||
+        if (!buf_u32(buf, buf_len, &pos, &prot) ||
+            !buf_u32(buf, buf_len, &pos, &size) ||
             size > MAX_MEMBER_SIZE) {
             fprintf(stderr, "amiport: bad member header\n");
-            fclose(f);
+            return -1;
+        }
+        if (buf_len - pos < size) {
+            fprintf(stderr, "amiport: truncated member data\n");
             return -1;
         }
 
@@ -377,7 +415,6 @@ static long extract_apak(const char *apak_path, const char *destdir)
                 *p = '/';
                 if (sub[0] == '\0' || !make_dir(sub)) {
                     fprintf(stderr, "amiport: cannot create %s\n", sub);
-                    fclose(f);
                     return -1;
                 }
             }
@@ -386,35 +423,19 @@ static long extract_apak(const char *apak_path, const char *destdir)
         path_join(dest, (int)sizeof(dest), destdir, name);
         if (dest[0] == '\0') {
             fprintf(stderr, "amiport: path too long for '%s'\n", name);
-            fclose(f);
             return -1;
         }
         o = fopen(dest, "wb");
         if (!o) {
             fprintf(stderr, "amiport: cannot write %s\n", dest);
-            fclose(f);
             return -1;
         }
-        left = size;
-        while (left > 0) {
-            unsigned long take = left;
-
-            if (take > sizeof(copybuf))
-                take = sizeof(copybuf);
-            if (fread(copybuf, 1, take, f) != take) {
-                fprintf(stderr, "amiport: truncated member data\n");
-                fclose(o);
-                fclose(f);
-                return -1;
-            }
-            if (fwrite(copybuf, 1, take, o) != take) {
-                fprintf(stderr, "amiport: short write on %s\n", dest);
-                fclose(o);
-                fclose(f);
-                return -1;
-            }
-            left -= take;
+        if (size > 0 && fwrite(buf + pos, 1, (size_t)size, o) != size) {
+            fprintf(stderr, "amiport: short write on %s\n", dest);
+            fclose(o);
+            return -1;
         }
+        pos += size;
         fclose(o);
 #ifndef HOST_TEST
         if (prot != 0)
@@ -426,7 +447,6 @@ static long extract_apak(const char *apak_path, const char *destdir)
         done++;
     }
 
-    fclose(f);
     return done;
 }
 
@@ -441,6 +461,7 @@ static int cmd_install(const char *host, int port, const char *rpath,
     char url_path[640];
     char got_sha1[41];
     FILE *f;
+    unsigned char *abuf = NULL;
     long bodylen = 0, nfiles;
     int status;
 
@@ -448,6 +469,12 @@ static int cmd_install(const char *host, int port, const char *rpath,
         return 10;
     if (!index_find(body, pkg, &e)) {
         fprintf(stderr, "amiport: package '%s' not in the index\n", pkg);
+        return 12;
+    }
+    /* the name becomes a directory component below; never trust it */
+    if (!pkg_name_is_safe(e.name)) {
+        fprintf(stderr, "amiport: refusing package with unsafe name '%s'\n",
+                e.name);
         return 12;
     }
 
@@ -464,7 +491,12 @@ static int cmd_install(const char *host, int port, const char *rpath,
         return 14;
     }
 
-    /* stream the archive to a temp file, hashing as it lands */
+    /* Download the archive to a temp file (memory-light transport), then
+       read the whole image into one RAM buffer, hash THAT buffer, and
+       extract from it. The bytes we verify are byte-for-byte the bytes we
+       extract, so there is no verify-then-reopen TOCTOU: swapping the temp
+       file on disk after the hash cannot smuggle unverified bytes into the
+       install, and nothing is ever reopened by path for extraction. */
     path_join(tmpfile, (int)sizeof(tmpfile), prefix, "download.apak.tmp");
     f = fopen(tmpfile, "wb");
     if (!f) {
@@ -482,29 +514,63 @@ static int cmd_install(const char *host, int port, const char *rpath,
     }
     printf("  fetched %s: %ld bytes\n", e.archive, bodylen);
 
-    /* verify before anything gets extracted */
+    if (bodylen <= 0 || (unsigned long)bodylen > MAX_ARCHIVE_BYTES) {
+        fprintf(stderr, "amiport: archive size %ld out of range\n", bodylen);
+        delete_file(tmpfile);
+        return 14;
+    }
+    abuf = (unsigned char *)malloc((size_t)bodylen);
+    if (!abuf) {
+        fprintf(stderr, "amiport: out of memory for %ld-byte archive\n",
+                bodylen);
+        delete_file(tmpfile);
+        return 14;
+    }
+    f = fopen(tmpfile, "rb");
+    if (!f || fread(abuf, 1, (size_t)bodylen, f) != (size_t)bodylen) {
+        fprintf(stderr, "amiport: cannot read back %s\n", tmpfile);
+        if (f)
+            fclose(f);
+        free(abuf);
+        delete_file(tmpfile);
+        return 14;
+    }
+    fclose(f);
+    delete_file(tmpfile);   /* disk copy no longer needed, and not trusted */
+
+    /* verify the in-memory image: this hash covers exactly what we extract */
+    rtc_sha1_hex(abuf, (unsigned long)bodylen, got_sha1);
     if (strcmp(got_sha1, e.sha1) != 0) {
         fprintf(stderr, "amiport: SHA-1 MISMATCH, refusing to install\n");
         fprintf(stderr, "  index: %s\n", e.sha1);
         fprintf(stderr, "  got:   %s\n", got_sha1);
-        delete_file(tmpfile);
+        free(abuf);
         return 13;
     }
     printf("  sha1 verified: %s\n", got_sha1);
 
-    nfiles = extract_apak(tmpfile, pkgdir);
-    delete_file(tmpfile);
+    nfiles = extract_apak(abuf, (unsigned long)bodylen, pkgdir);
+    free(abuf);
     if (nfiles < 0)
         return 14;
 
-    /* register */
+    /* register; if this write fails the install is not recorded, so it
+       must not be reported as success */
     path_join(dbfile, (int)sizeof(dbfile), prefix, "installed.db");
     f = fopen(dbfile, "ab");
-    if (f) {
-        fprintf(f, "%s|%s|%s|%ld\n", e.name, e.version, e.sha1, nfiles);
+    if (!f) {
+        fprintf(stderr, "amiport: cannot update %s, install not registered\n",
+                dbfile);
+        return 14;
+    }
+    if (fprintf(f, "%s|%s|%s|%ld\n", e.name, e.version, e.sha1, nfiles) < 0) {
+        fprintf(stderr, "amiport: failed writing %s\n", dbfile);
         fclose(f);
-    } else {
-        fprintf(stderr, "amiport: warning: cannot update %s\n", dbfile);
+        return 14;
+    }
+    if (fclose(f) != 0) {
+        fprintf(stderr, "amiport: failed closing %s\n", dbfile);
+        return 14;
     }
 
     printf("installed %s %s to %s (%ld file%s)\n",
