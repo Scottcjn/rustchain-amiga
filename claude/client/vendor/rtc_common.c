@@ -438,7 +438,12 @@ int rtc_net_open(void)
 {
     if (SocketBase)
         return 1;
-    SocketBase = OpenLibrary((STRPTR)"bsdsocket.library", 4);
+    /* v3, not v4: on AROS/FS-UAE bsdsocket, opening v4 works for socket I/O
+       but CloseLibrary() on the v4 base HANGS at process exit (and leaking it
+       poisons the next same-shell invocation). v3 opens and closes cleanly --
+       this is exactly what the proven amiport client uses. The AmiSSL direct
+       path re-checks the version it needs in amissl_init(). */
+    SocketBase = OpenLibrary((STRPTR)"bsdsocket.library", 3);
     if (!SocketBase) {
         fprintf(stderr, "[FAIL] bsdsocket.library not available\n");
         fprintf(stderr, "       start a TCP/IP stack (Roadshow/AmiTCP) or enable\n");

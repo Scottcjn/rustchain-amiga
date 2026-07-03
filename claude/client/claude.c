@@ -449,6 +449,7 @@ static int hist_join(char *out, int outlen)
 #include <netdb.h>
 #include <proto/bsdsocket.h>
 
+#ifndef NO_AMISSL
 #include <proto/amisslmaster.h>
 #include <proto/amissl.h>
 #include <libraries/amisslmaster.h>
@@ -457,20 +458,60 @@ static int hist_join(char *out, int outlen)
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
-
-/* larger stack: TLS handshake is stack hungry */
-const char stack_size[] = "$STACK:131072";
+#endif
 
 /* SocketBase is owned by the vendored rtc_common.c; share the one instance */
 extern struct Library *SocketBase;
 
+#ifndef NO_AMISSL
 struct Library *AmiSSLMasterBase = NULL;    /* proto/amisslmaster.h expects it */
 struct Library *AmiSSLBase = NULL;          /* proto/amissl.h expects this name */
 struct Library *UtilityBase = NULL;         /* opened for tag handling */
 static int g_amissl_errno = 0;
 static int g_amissl_ready = 0;
+#endif
 
 /* ---- small helpers ---- */
+
+/* bebbo/libnix atoi/atol/strtol/strtoul hang on this m68k target (their
+   internal overflow arithmetic is miscompiled at -m68000). These shift-free,
+   32-bit-only replacements avoid libnix entirely and terminate cleanly.
+   Verified: the stock atoi("8791") never returns in-guest. */
+static unsigned long rc_strtoul(const char *s, char **end, int base)
+{
+    unsigned long v = 0;
+    while (*s == ' ' || *s == '\t') s++;
+    if (base == 16 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) s += 2;
+    for (;;) {
+        char c = *s;
+        int d;
+        if (c >= '0' && c <= '9') d = c - '0';
+        else if (c >= 'a' && c <= 'f') d = c - 'a' + 10;
+        else if (c >= 'A' && c <= 'F') d = c - 'A' + 10;
+        else break;
+        if (d >= base) break;
+        /* No variable multiply: bebbo's __mulsi3 helper (emitted for a
+           runtime-variable 32-bit multiply on the 68000, which has no
+           32x32 MUL) hangs on this target. Constant *10 is strength-reduced
+           to shifts/adds; base-16 is a plain 4-bit shift. */
+        if (base == 16)
+            v = (v << 4) | (unsigned long)d;
+        else
+            v = (v << 3) + (v << 1) + (unsigned long)d;   /* v*10, no helper */
+        s++;
+    }
+    if (end) *end = (char *)s;
+    return v;
+}
+
+static long rc_atol(const char *s)
+{
+    int neg = 0;
+    while (*s == ' ' || *s == '\t') s++;
+    if (*s == '-') { neg = 1; s++; }
+    else if (*s == '+') s++;
+    return neg ? -(long)rc_strtoul(s, NULL, 10) : (long)rc_strtoul(s, NULL, 10);
+}
 
 static int parse_ipv4(const char *s, unsigned long *out)
 {
@@ -479,7 +520,7 @@ static int parse_ipv4(const char *s, unsigned long *out)
     char *end;
 
     for (i = 0; i < 4; i++) {
-        parts[i] = strtoul(s, &end, 10);
+        parts[i] = rc_strtoul(s, &end, 10);
         if (end == s || parts[i] > 255) return 0;
         if (i < 3 && *end != '.') return 0;
         s = end + 1;
@@ -580,6 +621,17 @@ static long proxy_post(const char *host, int port, const char *body,
 
 /* ---- AmiSSL init (follows SDK example https.c, OS3/m68k path) ---- */
 
+#ifdef NO_AMISSL
+/* proxy-only build: no AmiSSL linked. The direct-HTTPS transport is absent;
+   the client must be run with --proxy. These stubs keep main() unchanged. */
+static void amissl_cleanup(void) { }
+static long amissl_post(const char *body, char *resp, long resplen)
+{
+    (void)body; (void)resp; (void)resplen;
+    fprintf(stderr, "[claude] built without AmiSSL; use --proxy host:port\n");
+    return -1;
+}
+#else
 static void amissl_cleanup(void)
 {
     if (g_amissl_ready) {
@@ -770,6 +822,7 @@ static long amissl_post(const char *body, char *resp, long resplen)
     SSL_CTX_free(ctx);
     return total;
 }
+#endif /* NO_AMISSL */
 
 /* ---- de-chunk an HTTP/1.1 chunked body in place (Amiga side) ----
    Some HTTP/1.1 responses arrive Transfer-Encoding: chunked. Rewrites the
@@ -780,7 +833,7 @@ static void dechunk_in_place(char *body)
     char *r = body, *w = body;
 
     for (;;) {
-        long sz = strtol(r, NULL, 16);
+        long sz = (long)rc_strtoul(r, NULL, 16);
         char *nl = strchr(r, '\n');
         if (!nl || sz <= 0)
             break;
@@ -1007,7 +1060,7 @@ static int run_conversation(void)
     static char textout[TEXTBUF];
     static char toolmsg[TRBLOCK_BUF + 4096];
     static char asst[CONTENTBUF + 128];
-    struct tool_call calls[MAX_TOOLS];
+    static struct tool_call calls[MAX_TOOLS];   /* ~17.6 KB: keep off the stack */
     int iter;
 
     for (iter = 0; iter < MAX_ITERS; iter++) {
@@ -1058,8 +1111,11 @@ static int run_conversation(void)
             ncalls = 0;
             collect_text_and_tools(content_arr, textout, sizeof(textout),
                                    calls, &ncalls, MAX_TOOLS);
-            if (textout[0])
+            if (textout[0]) {
                 printf("%s\n", textout);
+                fflush(stdout);   /* redirected stdout is fully buffered; a
+                                     later hang must not swallow the reply */
+            }
 
             if (strcmp(stop, "tool_use") != 0 || ncalls == 0)
                 return 1;   /* end_turn (or nothing to do) */
@@ -1169,7 +1225,7 @@ int main(int argc, char **argv)
             colon = strchr(hp, ':');
             if (colon) {
                 *colon = '\0';
-                g_proxy_port = atoi(colon + 1);
+                g_proxy_port = (int)rc_atol(colon + 1);
             }
             strncpy(g_proxy_host, hp, sizeof(g_proxy_host) - 1);
             g_proxy_host[sizeof(g_proxy_host) - 1] = '\0';
@@ -1177,7 +1233,7 @@ int main(int argc, char **argv)
         } else if (strcmp(argv[i], "--model") == 0 && i + 1 < argc) {
             g_model = argv[++i];
         } else if (strcmp(argv[i], "--max-tokens") == 0 && i + 1 < argc) {
-            g_maxtok = atol(argv[++i]);
+            g_maxtok = rc_atol(argv[++i]);
         } else if (strcmp(argv[i], "--yes") == 0) {
             g_yes = 1;
         } else if (strcmp(argv[i], "--insecure") == 0) {

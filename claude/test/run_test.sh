@@ -30,20 +30,16 @@ sleep 1
 # 1. clean prior output (and FS-UAE .uaem sidecars) so results are fresh
 rm -f "$LOG" "$LOG.uaem" "$TOOLOUT" "$TOOLOUT.uaem" "$DONE" "$DONE.uaem"
 
-# 1b. point the guest at this host's real LAN IP. The guest shares the host's
-#     network identity through bsdsocket, so the host's own LAN IP loops back
-#     to the mock (loopback 127.0.0.1 is NOT routed by FS-UAE's bsdsocket).
-HOSTIP="$(ip -4 route get 1.1.1.1 2>/dev/null | grep -oP 'src \K[0-9.]+' | head -1)"
-[ -z "$HOSTIP" ] && HOSTIP="$(hostname -I 2>/dev/null | awk '{print $1}')"
-if [ -n "$HOSTIP" ]; then
-    echo "host LAN IP: $HOSTIP (rewriting startup-sequence)"
-    sed -i -E "s/--proxy [0-9.]+:$PORT/--proxy $HOSTIP:$PORT/g" \
-        "$SHARED/S/startup-sequence"
-else
-    echo "WARN: could not detect host IP; using whatever is in startup-sequence"
-fi
+# 1b. point the guest at 127.0.0.1. FS-UAE's bsdsocket runs the guest's socket
+#     calls as HOST socket calls, so the guest connecting to 127.0.0.1 reaches
+#     the HOST loopback where the mock listens. This is the proven pattern from
+#     the amiports test (ports/test/run_test.sh serves on 0.0.0.0, guest hits
+#     127.0.0.1). An earlier LAN-IP rewrite here hung tcp_connect -- reverted.
+echo "guest proxy target: 127.0.0.1:$PORT (bsdsocket -> host loopback)"
+sed -i -E "s/--proxy [0-9.]+:$PORT/--proxy 127.0.0.1:$PORT/g" \
+    "$SHARED/S/startup-sequence"
 
-# 2. start the mock proxy (bound to 0.0.0.0 so the host LAN IP reaches it)
+# 2. start the mock proxy (bound to 0.0.0.0 so both loopback and LAN reach it)
 python3 "$HERE/mock_proxy.py" --bind 0.0.0.0 --port "$PORT" >/tmp/claude_mock.log 2>&1 &
 MOCK=$!
 sleep 1

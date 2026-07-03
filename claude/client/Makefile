@@ -17,14 +17,19 @@ GINC    := /work/python/src/amissl-sdk/AmiSSL/Developer/include
 GLIB    := /work/python/src/amissl-sdk/AmiSSL/Developer/lib/AmigaOS3
 
 SRC     := claude.c vendor/rtc_common.c
-CROSSFLAGS := -noixemul -m68000 -O2 -fomit-frame-pointer \
+# -m68020: the client requires a full AmiSSL + bsdsocket AROS (A4000/040 class,
+# never a bare 68000), and -m68020 emits native 32-bit MULU.L/MULS.L instead of
+# bebbo's __mulsi3 helper, which HANGS on this target -- the proven bebbo
+# -m68000 miscompile (also the 64-bit-shift bug). Matches the python/ and java/
+# ports, which are on -m68020 for the same reason.
+CROSSFLAGS := -noixemul -m68020 -O2 -fomit-frame-pointer \
               -Wall -Wextra -Wno-unused-parameter -I$(GINC)
 
 .PHONY: all host-test clean
 
-all: bin/claude host-test
+all: bin/claude bin/claude-proxy host-test
 
-# --- Amiga hunk executable (primary target) ---
+# --- Amiga hunk executable (primary target, AmiSSL direct HTTPS + proxy) ---
 bin/claude: claude.c vendor/rtc_common.c vendor/rtc_common.h
 	mkdir -p bin
 	$(DOCKER) m68k-amigaos-gcc $(CROSSFLAGS) \
@@ -32,6 +37,17 @@ bin/claude: claude.c vendor/rtc_common.c vendor/rtc_common.h
 	    -L$(GLIB) -lamisslstubs
 	@echo "--- file bin/claude ---"
 	@file bin/claude
+
+# --- proxy-only build (no AmiSSL): for bare-ROM AROS with only bsdsocket.
+#     Smaller, links no TLS. Run with --proxy host:port. -DNO_AMISSL drops the
+#     AmiSSL transport and its stubs. ---
+bin/claude-proxy: claude.c vendor/rtc_common.c vendor/rtc_common.h
+	mkdir -p bin
+	$(DOCKER) m68k-amigaos-gcc -noixemul -m68020 -O2 -fomit-frame-pointer \
+	    -Wall -Wextra -Wno-unused-parameter -DNO_AMISSL \
+	    -o bin/claude-proxy claude.c vendor/rtc_common.c
+	@echo "--- file bin/claude-proxy ---"
+	@file bin/claude-proxy
 
 # --- host self-test (native + 32-bit ILP32) ---
 host-test: host_test host_test32
@@ -48,4 +64,4 @@ host_test32: claude.c vendor/rtc_common.c vendor/rtc_common.h
 	  || echo "(-m32 unavailable on this host; native test is authoritative)"
 
 clean:
-	rm -f host_test host_test32 bin/claude
+	rm -f host_test host_test32 bin/claude bin/claude-proxy

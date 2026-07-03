@@ -19,7 +19,7 @@ Usage: python3 mock_proxy.py --port 8791
 import sys
 import json
 import argparse
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 TOOL_FILE = "SYS:claude_tool_out.txt"
 TOOL_TEXT = "Hello, written by the Claude tool-use loop on the Amiga.\n"
@@ -132,7 +132,7 @@ def main():
     ap.add_argument("--bind", default="0.0.0.0")
     ap.add_argument("--port", type=int, default=8791)
     args = ap.parse_args()
-    srv = ThreadingHTTPServer((args.bind, args.port), Handler)
+    srv = HTTPServer((args.bind, args.port), Handler)
     log("mock proxy on %s:%d" % (args.bind, args.port))
     try:
         srv.serve_forever()
