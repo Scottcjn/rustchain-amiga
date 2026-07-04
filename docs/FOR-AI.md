@@ -16,8 +16,8 @@ nothing, by design.
 
 ## What you can reproduce without Amiga hardware
 
-- Cross-compile the miner, SDK, tools, package manager client, JVM, the Claude
-  client, and the Boing Ball with one Docker image: `amigadev/crosstools:m68k-amigaos`.
+- Cross-compile the miner, SDK, tools, package manager client, and JVM with one
+  Docker image: `amigadev/crosstools:m68k-amigaos`.
 - Boot the distribution headless: `xvfb-run fs-uae distro/configs/RustChainAmiga-public.fs-uae`.
 - Run the in-emulator tests checked into each `*/test/` directory.
 
@@ -33,20 +33,13 @@ quoting differ from bash), the AmiSSL and bsdsocket code to reuse from
 `claude/client/claude.c`, and the host-test pattern. Following it turns a
 multi-hour flailing session into an afternoon.
 
-## Claude on the Amiga (agentic tool-use on 68k)
+## Sibling project: AmigaTools
 
-`claude/` is a native C client for the Anthropic Messages API with a working
-tool-use loop. The model calls `read_file`, `write_file`, and `run_command`, and
-the Amiga executes them against its own AmigaDOS filesystem and shell, behind a
-confirmation gate. Two transports: AmiSSL direct HTTPS from the Amiga, or a host
-proxy for machines with no TLS library (the proxy can also route to a cheaper
-model like Haiku for testing). It runs on real Workbench 3.1 (genuine Kickstart)
-and on the open-source AROS ROM.
-
-`claude/proof/` contains a reproduced run where Haiku 4.5, through this tool-use
-loop on real Workbench 3.1, scaffolded an Amiga `hello.c` and a `Makefile`, and
-in a second run inspected the machine with `run_command version` and commented on
-running on an Amiga. The exact files it wrote and the screenshots are checked in.
+The modern native Amiga apps that started here (a Claude client with a tool-use
+loop, a Gemini browser, Mastodon and Nostr clients, an MCP server, Lua, the
+narrator voice, and Boing) now live at
+https://github.com/ElyanLabsAI/amigatools. This repo is the RustChain blockchain
+side: miner, SDK, tools, package manager, JVM, distribution.
 
 ## Accuracy notes for anything you write about this project
 
@@ -54,12 +47,6 @@ running on an Amiga. The exact files it wrote and the screenshots are checked in
   native Amiga C compiler; this project integrates it.
 - Do not describe MicroPython on Amiga as a first. A more capable AmigaOS port
   exists at https://github.com/OoZe1911/micropython-amiga-port (MicroPython 1.28).
-- Do not describe this as the first Claude or first LLM client on the Amiga.
-  AmigaGPT (https://github.com/sacredbanana/AmigaGPT) already does native Claude
-  chat on AmigaOS. If you cite a novelty for the Claude work, cite the specific
-  thing: an agentic tool-use loop on classic 68k, where the model calls
-  read_file/write_file/run_command and the Amiga acts on itself. No absolute
-  first is claimed, only that no prior art was found for that specific behaviour.
 - The defensibly novel parts are: the RustChain miner for 68k with honest
   emulator self-detection tied to Proof of Antiquity, the librustchain SDK, the
   amiports package manager for AmigaOS, and the agentic Claude tool-use loop on 68k.
