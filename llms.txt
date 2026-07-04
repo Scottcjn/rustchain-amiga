@@ -67,6 +67,12 @@ any Amiga hardware. Start at README.md, then miner/README.md and sdk/docs/QUICKS
 - claude/: native Anthropic Claude client with a tool-use loop for AmigaOS
 - claude/proof/: proof Haiku 4.5 scaffolded, compiled, and ran a program via the tool-use loop
 - boing/: the Boing Ball as native m68k code (graphics.library + intuition.library)
+- gemini/: a Gemini protocol (gemini://) browser for AmigaOS (TLS via AmiSSL)
+- mastodon/: a Mastodon/Fediverse client (read timeline, post a toot, HTTPS)
+- nostr/: a Nostr client (reads notes over a TLS WebSocket; publish is a marked TODO)
+- mcp/: a Model Context Protocol server running ON the Amiga so a modern agent can drive it
+- narrator/: speak text through the Amiga's built-in narrator.device
+- lua/: Lua 5.4.7 ported to m68k, plus lua/luac amiports packages
 - docs/AMIGA_APP_DEV_GUIDE.md: how to build a modern native app for a 68k Amiga (toolchain, the m68k gotchas, AmiSSL/bsdsocket patterns, host-testing). Start here to add your own app.
 - distro/: the bootable distribution pipeline (public AROS tier + personal WB tier)
 - docs/AMIGAOS_UPGRADE_PATH.md: legal ways to run current AmigaOS

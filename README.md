@@ -40,6 +40,12 @@ native m68k code (`boing/`):
 | `java/` | mjvm, a micro-JVM in ANSI C that runs javac-produced class files on AmigaOS. Plus an evidence-backed feasibility report on why GCJ was a dead end. |
 | `claude/` | Claude on the Amiga: a native C client for the Anthropic Messages API with a real tool-use loop. Chats, and reads/writes files and runs AmigaDOS commands on the Amiga at Claude's instruction, behind a confirm gate. AmiSSL direct HTTPS or a host proxy. Runs on real Workbench 3.1 and AROS m68k. See `claude/README.md`. |
 | `boing/` | The Boing Ball as native m68k code. Custom screen, purple grid, curved-checker sphere, shadow. graphics.library plus intuition.library. Because obviously. |
+| `gemini/` | A Gemini protocol (`gemini://`) browser. TLS via AmiSSL, a text/gemini renderer with a numbered link index, redirects, and an interactive browse loop. The web the Amiga can actually run. |
+| `mastodon/` | A Mastodon/Fediverse client. Read the timeline and post a toot over HTTPS. The token stays on the Amiga. |
+| `nostr/` | A Nostr client. Reads notes from a relay over a TLS WebSocket (RFC6455 handshake and framing, NIP-01 parsing). Publishing is a marked TODO (needs secp256k1 Schnorr). |
+| `mcp/` | A Model Context Protocol server that runs ON the Amiga, exposing read_file/write_file/run_command as MCP tools over stdio JSON-RPC. Lets a modern agent drive the Amiga. |
+| `narrator/` | A `say` command that speaks text through the Amiga's built-in narrator.device, the iconic robotic voice, from C. |
+| `lua/` | Lua 5.4.7 ported to m68k (`bin/lua`, `bin/luac`), plus lua and luac amiports packages. |
 | `distro/` | The distribution pipeline. Builds a bootable public HDF on the open-source AROS ROM, a rustchain-tools.lha pack for stock Workbench, and a personal Workbench 3.1 variant for people who own the real thing. |
 | `emu/` | FS-UAE environment: configs, AROS ROM hashes, boot evidence. |
 | `docs/` | The AmigaOS upgrade path, plus `AMIGA_APP_DEV_GUIDE.md`: how to build your own modern native app for a 68k Amiga (toolchain, the m68k gotchas, AmiSSL and bsdsocket patterns, host-testing). |
