@@ -1,0 +1,15 @@
+[18:15:16] Claude Amiga proxy listening on 0.0.0.0:8799 (POST /). Ctrl-C to stop.
+[18:15:37] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=1 tools=no
+[18:15:38]   <- 200 (266 bytes)
+[18:17:21] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=1 tools=yes
+[18:17:24]   <- 200 (754 bytes)
+[18:17:24] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=3 tools=yes
+[18:17:26]   <- 200 (604 bytes)
+[18:17:26] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=5 tools=yes
+[18:17:28]   <- 200 (812 bytes)
+[18:20:13] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=1 tools=yes
+[18:20:15]   <- 200 (670 bytes)
+[19:03:49] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=1 tools=yes
+[19:03:51]   <- 200 (558 bytes)
+[19:03:51] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=3 tools=yes
+[19:03:53]   <- 200 (892 bytes)

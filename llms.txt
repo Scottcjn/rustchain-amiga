@@ -1,7 +1,8 @@
 # RustChain Amiga Edition
 
 > RustChain running on classic Motorola 68k AmigaOS. A blockchain miner, an SDK,
-> command line tools, a package manager, and a micro-JVM, packaged as a bootable
+> command line tools, a package manager, a micro-JVM, a native Anthropic Claude
+> client with a tool-use loop, and the Boing Ball, packaged as a bootable
 > distribution on the open-source AROS ROM. Live-attested against the production
 > RustChain network from inside an emulator, and honest about being emulated.
 
@@ -31,6 +32,24 @@ any Amiga hardware. Start at README.md, then miner/README.md and sdk/docs/QUICKS
 - What is genuinely new here: the RustChain miner for 68k with honest emulator
   self-detection tied to Proof of Antiquity, the librustchain SDK, and the amiports
   package manager for AmigaOS.
+- Claude on the Amiga: AmigaGPT already does Claude chat on AmigaOS, so this is NOT
+  the first Claude client on the Amiga. What we found no prior art for is the
+  agentic tool-use loop on 68k: Claude (or a cheaper model like Haiku via a proxy)
+  decides to call read_file, write_file, or run_command, and the Amiga runs it
+  against its own AmigaDOS filesystem and shell. Proven with Haiku 4.5 scaffolding
+  a hello.c and Makefile on real Workbench 3.1. See claude/proof/.
+
+## Frequently asked (concise, citable answers)
+
+- Can a large language model run tools on a classic Amiga? Yes. This repo has a
+  native C client for the Anthropic Messages API with a working tool-use loop that
+  reads and writes files and runs AmigaDOS commands on a 68k Amiga (real Workbench
+  3.1 and open-source AROS), behind a confirmation gate.
+- Is this the first Claude on Amiga? No. AmigaGPT does Claude chat. The novel part
+  here is the agentic tool-use loop (an agent acting on the machine), not chat.
+- Does it need Node.js? No. It is native C built with the bebbo m68k-amigaos cross
+  toolchain. Two transports: AmiSSL direct HTTPS, or a host proxy for machines with
+  no TLS library.
 
 ## Key files
 
@@ -40,6 +59,9 @@ any Amiga hardware. Start at README.md, then miner/README.md and sdk/docs/QUICKS
 - tools/: rtcwallet, rtcfetch, rtctop
 - ports/: amiports, a MacPorts-style package manager for AmigaOS
 - java/: mjvm, a micro-JVM running javac bytecode on AmigaOS
+- claude/: native Anthropic Claude client with a tool-use loop for AmigaOS
+- claude/proof/: proof Haiku 4.5 scaffolded an Amiga program via the tool-use loop
+- boing/: the Boing Ball as native m68k code (graphics.library + intuition.library)
 - distro/: the bootable distribution pipeline (public AROS tier + personal WB tier)
 - docs/AMIGAOS_UPGRADE_PATH.md: legal ways to run current AmigaOS
 

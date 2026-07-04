@@ -20,6 +20,15 @@ since AROS is redistributable and real Kickstart ROMs are not):
 
 ![Claude Code running on AROS m68k](screenshots/claude-on-amiga-cli.png)
 
+## Proof the tooling works with a real model
+
+`proof/` has two reproduced runs where Haiku 4.5 (reached through the proxy in
+OpenRouter mode) drove the tool-use loop on real Workbench 3.1: one where it
+scaffolded a `hello.c` and `Makefile` with `write_file`, and one where it used
+`run_command version` / `avail` to work out it was on a Commodore Amiga running
+AmigaOS 3.1 and commented on the anachronism. The exact files it wrote, the
+screenshots, and a redacted proxy log are checked in. See `proof/README.md`.
+
 (`type: object not found` is only because `type` is not in the bare AROS ROM
 shell. The file was written; the tool-use loop reported it, and the file is
 there on the volume.)
