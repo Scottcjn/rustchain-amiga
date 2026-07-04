@@ -1,0 +1,40 @@
+# Gemini on the Amiga - in-guest test config (FS-UAE 3.1.66 + AROS m68k)
+# Boots the open-source AROS m68k ROM (no commercial Kickstart, no AmiSSL)
+# and auto-runs the gemini client from shared/S/startup-sequence against a
+# host-side proxy bridge (gemini/proxy/gemini_amiga_proxy.py) that fronts a
+# canned local Gemini capsule (canned_capsule.py), so the test is
+# deterministic and does not depend on public internet reachability from
+# inside the emulator.
+#
+# Modeled directly on claude/test/claude-test.fs-uae (same AROS ROM, same
+# bsdsocket_library=1 host-loopback trick).
+#
+# Driven by run_test.sh (starts capsule + bridge, boots headless, checks
+# shared/gemini.log, grabs a screenshot).
+[fs-uae]
+
+# A4000/040: AROS m68k boots on 68020+; 32-bit addressing for Zorro III RAM.
+amiga_model = A4000/040
+
+# AROS m68k Kickstart replacement (open source, no AmiSSL). Shared with the
+# claude/test and miner envs.
+kickstart_file = /home/scott/rustchain-amiga/emu/roms/aros-amiga-m68k-rom.bin
+kickstart_ext_file = /home/scott/rustchain-amiga/emu/roms/aros-amiga-m68k-ext.bin
+
+chip_memory = 2048
+zorro_iii_memory = 32768
+
+# bsdsocket.library emulation: guest socket calls run as host sockets, so the
+# guest's 127.0.0.1 reaches the host loopback where the proxy bridge listens.
+bsdsocket_library = 1
+
+# Boot volume: this test's shared directory, mounted as DH0:/SYS:. Holds the
+# gemini (proxy-only, no AmiSSL) binary and S/startup-sequence; gemini.log is
+# written here (host-visible).
+hard_drive_0 = /home/scott/rustchain-amiga/gemini/test/shared
+hard_drive_0_label = Gemini
+
+fullscreen = 0
+initial_input_grab = 0
+automatic_input_grab = 0
+floppy_drive_volume = 0
