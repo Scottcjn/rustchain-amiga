@@ -22,4 +22,7 @@ claude/test/shared/claude
 claude/client/bin/
 claude/client/host_test*
 claude/test/*.bak
+mastodon/host_test*
+mastodon/host_mastodon_proxydemo
+mastodon/**/__pycache__/
 *.bak
