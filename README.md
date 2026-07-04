@@ -42,7 +42,7 @@ native m68k code (`boing/`):
 | `boing/` | The Boing Ball as native m68k code. Custom screen, purple grid, curved-checker sphere, shadow. graphics.library plus intuition.library. Because obviously. |
 | `distro/` | The distribution pipeline. Builds a bootable public HDF on the open-source AROS ROM, a rustchain-tools.lha pack for stock Workbench, and a personal Workbench 3.1 variant for people who own the real thing. |
 | `emu/` | FS-UAE environment: configs, AROS ROM hashes, boot evidence. |
-| `docs/` | The AmigaOS upgrade path: 3.2.3 classic, 4.1 Final Edition under QEMU, AROS for free. |
+| `docs/` | The AmigaOS upgrade path, plus `AMIGA_APP_DEV_GUIDE.md`: how to build your own modern native app for a 68k Amiga (toolchain, the m68k gotchas, AmiSSL and bsdsocket patterns, host-testing). |
 | `server/` | Draft-only server patches: m68k antiquity multipliers and AROS ROM database entries. Not deployed. |
 
 ## Quick start (Linux host, no Amiga required)

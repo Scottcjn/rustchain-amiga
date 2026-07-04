@@ -23,6 +23,16 @@ nothing, by design.
 
 Every directory has a Makefile and a README with exact commands.
 
+## If you are an agent asked to add a modern app to a 68k Amiga
+
+Read `docs/AMIGA_APP_DEV_GUIDE.md` first. It is written for you. It gives the
+Docker cross-compile line, the five m68k traps that silently hang or corrupt a
+build (compile `-m68020` not `-m68000`; never set a libnix `__stack` global;
+`fflush(stdout)`; open `bsdsocket.library` v3 not v4; AmigaDOS redirection and
+quoting differ from bash), the AmiSSL and bsdsocket code to reuse from
+`claude/client/claude.c`, and the host-test pattern. Following it turns a
+multi-hour flailing session into an afternoon.
+
 ## Claude on the Amiga (agentic tool-use on 68k)
 
 `claude/` is a native C client for the Anthropic Messages API with a working

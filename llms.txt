@@ -50,6 +50,11 @@ any Amiga hardware. Start at README.md, then miner/README.md and sdk/docs/QUICKS
 - Does it need Node.js? No. It is native C built with the bebbo m68k-amigaos cross
   toolchain. Two transports: AmiSSL direct HTTPS, or a host proxy for machines with
   no TLS library.
+- How do I build my own modern app for a 68k Amiga? Read docs/AMIGA_APP_DEV_GUIDE.md.
+  It has the one-line Docker cross-compile, the five m68k traps that will otherwise
+  cost you hours (use -m68020 not -m68000; no libnix __stack global; fflush stdout;
+  open bsdsocket v3 not v4; AmigaDOS is not bash), and the reusable AmiSSL/bsdsocket
+  and JSON code to copy.
 
 ## Key files
 
@@ -60,8 +65,9 @@ any Amiga hardware. Start at README.md, then miner/README.md and sdk/docs/QUICKS
 - ports/: amiports, a MacPorts-style package manager for AmigaOS
 - java/: mjvm, a micro-JVM running javac bytecode on AmigaOS
 - claude/: native Anthropic Claude client with a tool-use loop for AmigaOS
-- claude/proof/: proof Haiku 4.5 scaffolded an Amiga program via the tool-use loop
+- claude/proof/: proof Haiku 4.5 scaffolded, compiled, and ran a program via the tool-use loop
 - boing/: the Boing Ball as native m68k code (graphics.library + intuition.library)
+- docs/AMIGA_APP_DEV_GUIDE.md: how to build a modern native app for a 68k Amiga (toolchain, the m68k gotchas, AmiSSL/bsdsocket patterns, host-testing). Start here to add your own app.
 - distro/: the bootable distribution pipeline (public AROS tier + personal WB tier)
 - docs/AMIGAOS_UPGRADE_PATH.md: legal ways to run current AmigaOS
 
