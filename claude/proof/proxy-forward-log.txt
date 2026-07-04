@@ -1,15 +1,31 @@
-[18:15:16] Claude Amiga proxy listening on 0.0.0.0:8799 (POST /). Ctrl-C to stop.
-[18:15:37] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=1 tools=no
-[18:15:38]   <- 200 (266 bytes)
-[18:17:21] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=1 tools=yes
-[18:17:24]   <- 200 (754 bytes)
-[18:17:24] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=3 tools=yes
-[18:17:26]   <- 200 (604 bytes)
-[18:17:26] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=5 tools=yes
-[18:17:28]   <- 200 (812 bytes)
-[18:20:13] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=1 tools=yes
-[18:20:15]   <- 200 (670 bytes)
-[19:03:49] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=1 tools=yes
-[19:03:51]   <- 200 (558 bytes)
-[19:03:51] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=3 tools=yes
-[19:03:53]   <- 200 (892 bytes)
+[21:12:20] Claude Amiga proxy listening on 0.0.0.0:8799 (POST /). Ctrl-C to stop.
+[21:12:55] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=1 tools=yes
+[21:12:57]   <- 200 (619 bytes)
+[21:12:57] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=3 tools=yes
+[21:12:58]   <- 200 (430 bytes)
+[21:12:58] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=5 tools=yes
+[21:13:00]   <- 200 (510 bytes)
+[21:13:00] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=7 tools=yes
+[21:13:01]   <- 200 (582 bytes)
+[21:13:02] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=9 tools=yes
+[21:13:03]   <- 200 (418 bytes)
+[21:13:04] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=11 tools=yes
+[21:13:06]   <- 200 (494 bytes)
+[21:13:06] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=13 tools=yes
+[21:13:08]   <- 200 (420 bytes)
+[21:13:08] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=15 tools=yes
+[21:13:10]   <- 200 (524 bytes)
+[21:46:07] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=1 tools=yes
+[21:46:09]   <- 200 (634 bytes)
+[21:46:09] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=3 tools=yes
+[21:46:11]   <- 200 (445 bytes)
+[21:46:11] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=5 tools=yes
+[21:46:13]   <- 200 (414 bytes)
+[21:46:13] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=7 tools=yes
+[21:46:16]   <- 200 (454 bytes)
+[21:56:12] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=1 tools=yes
+[21:56:14]   <- 200 (712 bytes)
+[21:56:14] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=3 tools=yes
+[21:56:16]   <- 200 (420 bytes)
+[21:56:16] FWD 127.0.0.1 backend=openrouter model=claude-opus-4-8 msgs=5 tools=yes
+[21:56:18]   <- 200 (761 bytes)

@@ -39,6 +39,27 @@ A practical note found while making this: AmigaDOS has a command-line length
 limit, so the prompt passed on one `claude "..."` line must stay short (a long
 prompt gives `Command too long`). The prompt above is deliberately terse.
 
+## 3. Haiku scaffolds, compiles, and runs a program (the full loop)
+
+The capstone. Prompt: write a small C program, compile it, run it, report the
+output. Haiku wrote `haiku-compile/hello.c` (`int result = 6 * 7; printf(...)`)
+with `write_file`, compiled it with `run_command Execute SYS:build` (which drives
+the vbcc pipeline on the Amiga from `devkit/`), ran the result with `run_command
+SYS:hello`, and reported back:
+
+> Ran it - The program printed: `Greeting! The result is: 42`. The program
+> correctly calculated 6 times 7 as 42.
+
+So the agent wrote source, invoked a real native compiler, produced a real m68k
+binary, executed it, and read its output back through the tool loop. Scaffold to
+build to run, on a 68k Amiga. This one is on the open-source AROS ROM, because
+the vbcc devkit environment used for the build is set up for AROS.
+
+![Haiku writes, compiles and runs a C program on the Amiga](screenshots/haiku-compile-run-amiga.png)
+
+(`list: object not found` at the end is only because `list` is not in this bare
+AROS ROM shell; the compiled `SYS:hello` binary is on disk.)
+
 ## Reproduce
 
 Host side (never commit the key):
