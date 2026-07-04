@@ -26,3 +26,16 @@ mastodon/host_test*
 mastodon/host_mastodon_proxydemo
 mastodon/**/__pycache__/
 *.bak
+
+# lua: upstream source (refetched by build.sh) and native build artifacts
+lua/src-lua/
+lua/host/lua
+lua/host/luac
+lua/emu-test/
+
+# amiport build scratch
+lua/build/
+ports/tree/lua/lua
+ports/tree/lua/src/
+ports/tree/luac/luac
+ports/tree/luac/src/
