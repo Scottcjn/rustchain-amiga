@@ -1,0 +1,39 @@
+diff --git a/ports/amiga/.build_number b/ports/amiga/.build_number
+index b4249c47..77f83230 100644
+--- a/ports/amiga/.build_number
++++ b/ports/amiga/.build_number
+@@ -1 +1 @@
+-239
++243
+diff --git a/ports/amiga/build/micropython b/ports/amiga/build/micropython
+index 86d4eb2f..035cbba4 100755
+Binary files a/ports/amiga/build/micropython and b/ports/amiga/build/micropython differ
+diff --git a/ports/amiga/modamigaos.c b/ports/amiga/modamigaos.c
+index f218f738..191b8478 100644
+--- a/ports/amiga/modamigaos.c
++++ b/ports/amiga/modamigaos.c
+@@ -19,6 +19,12 @@
+ #include <proto/dos.h>
+ #include <proto/exec.h>
+ #include <dos/dos.h>
++
++// Compat: older NDK headers (amigadev/crosstools image) lack FIBF_HOLD.
++// FIBB_HOLD is bit 7 per the AmigaOS 3.x dos/dos.h.
++#ifndef FIBF_HOLD
++#define FIBF_HOLD (1 << 7)
++#endif
+ #include <exec/execbase.h>
+ #include <graphics/gfxbase.h>
+ 
+diff --git a/ports/amiga/modarexx.c b/ports/amiga/modarexx.c
+index f3610be9..d42d2adc 100644
+--- a/ports/amiga/modarexx.c
++++ b/ports/amiga/modarexx.c
+@@ -35,6 +35,7 @@
+ #include <proto/exec.h>
+ #include <proto/rexxsyslib.h>
+ #include <exec/types.h>
++#include <exec/execbase.h> // compat: complete struct ExecBase for SysBase->PortList
+ #include <exec/ports.h>
+ #include <exec/memory.h>
+ #include <rexx/storage.h>

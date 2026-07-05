@@ -51,3 +51,8 @@ python/test/
 python/bin/upython
 python/bin/upython-min
 distro/test/personal-*.fs-uae
+
+# MicroPython Amiga port: fetched upstream deps (not vendored) + build outputs
+python/src/
+python/bin/
+python/test/
