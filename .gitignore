@@ -42,3 +42,12 @@ ports/tree/luac/src/
 
 # gemini test: throwaway self-signed capsule cert/key
 gemini/test/*.pem
+
+# FS-UAE sidecar metadata and test-run artifacts (never track)
+*.uaem
+devkit/test/shared/
+devkit/test/fsuae_*.log
+python/test/
+python/bin/upython
+python/bin/upython-min
+distro/test/personal-*.fs-uae
