@@ -95,6 +95,7 @@ fi
 # ---------------------------------------------------------------- stage 3: public HDF
 say "building images/RustChainAmiga.hdf (plain FFS, boots under AROS ROM)"
 HDF="$D/images/RustChainAmiga.hdf"
+mkdir -p "$D/images"
 STAGE=$(mktemp -d)
 mkdir -p "$STAGE/S" "$STAGE/C" "$STAGE/T" "$STAGE/docs"
 cp "$D/scripts/startup-sequence.public" "$STAGE/S/startup-sequence"
