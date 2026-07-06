@@ -1,0 +1,151 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Python checks + m68k cross-build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        # Pinned to a full commit SHA (not the mutable v4 tag) so the tag
+        # can't be silently repointed by the action owner.
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Set up JDK (for java/ host build + javac)
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # This repo ships prebuilt AmigaOS binaries as checked-in evidence
+      # (miner/rustchain_amiga, sdk/lib/librustchain.a, tools/bin/*,
+      # ports/client/amiport, java/vm/mjvm and their host-test companions).
+      # After checkout, make sees those targets as already present and
+      # skips the recipe, so without this step the "cross-compile" steps
+      # below would pass without ever invoking docker. Force a clean build
+      # so every run genuinely exercises the toolchain.
+      - name: Remove checked-in build artifacts so make rebuilds them
+        run: |
+          make -C miner clean
+          make -C sdk clean
+          make -C tools clean
+          make -C ports/client clean
+          make -C java clean
+
+      # -----------------------------------------------------------------
+      # Pure Python: syntax-check every real .py / .py.draft file in the
+      # repo, except python/ (that dir fetches upstream MicroPython into
+      # a gitignored src/ tree at build time and is out of scope here).
+      # -----------------------------------------------------------------
+      - name: Python syntax check
+        run: |
+          set -e
+          FILES=$(find . -path ./.git -prune -o -path ./python -prune -o \
+            \( -name '*.py' -o -name '*.py.draft' \) -print)
+          echo "$FILES"
+          python3 -m py_compile $FILES
+
+      # -----------------------------------------------------------------
+      # miner/ - single-file C miner, cross-compiled to an Amiga hunk exe,
+      # plus two host-side self-tests (native x86_64 and ILP32 i386).
+      # -----------------------------------------------------------------
+      - name: miner - cross-compile (m68k-amigaos)
+        run: make -C miner rustchain_amiga
+
+      - name: miner - verify binary type
+        run: file miner/rustchain_amiga | grep -q "AmigaOS loadseg" || (echo "not an AmigaOS executable"; exit 1)
+
+      - name: miner - host self-test (x86_64)
+        run: make -C miner host_test && ./miner/host_test
+
+      - name: miner - host self-test (ILP32 via i386/gcc)
+        run: make -C miner host-test32
+
+      # -----------------------------------------------------------------
+      # sdk/ - librustchain static lib + two examples, cross-compiled,
+      # plus the host-test target (native + ILP32 + a python json.loads
+      # sanity check on the built attestation payload).
+      # -----------------------------------------------------------------
+      - name: sdk - cross-compile lib + examples (m68k-amigaos)
+        run: make -C sdk lib examples
+
+      - name: sdk - verify binaries
+        run: |
+          file sdk/lib/librustchain.a
+          file sdk/examples/attest_demo | grep -q "AmigaOS loadseg"
+          file sdk/examples/hello_rustchain | grep -q "AmigaOS loadseg"
+
+      - name: sdk - host-test (native + ILP32 + json.loads)
+        run: make -C sdk host-test
+
+      # -----------------------------------------------------------------
+      # tools/ - rtcwallet, rtcfetch, rtctop, cross-compiled, plus their
+      # host-tests against the real captured node responses in testdata/.
+      # -----------------------------------------------------------------
+      - name: tools - cross-compile (m68k-amigaos)
+        run: make -C tools all
+
+      - name: tools - verify binaries
+        run: file tools/bin/rtcwallet tools/bin/rtcfetch tools/bin/rtctop
+
+      - name: tools - host-test (native)
+        run: make -C tools host-test
+
+      - name: tools - host-test (ILP32 via i386/gcc)
+        run: make -C tools host-test32
+
+      # -----------------------------------------------------------------
+      # ports/client - amiport, the on-Amiga package manager client.
+      # -----------------------------------------------------------------
+      - name: ports/client - cross-compile (m68k-amigaos)
+        run: make -C ports/client amiport
+
+      - name: ports/client - verify binary type
+        run: file ports/client/amiport | grep -q "AmigaOS loadseg"
+
+      # amiport's own exit-code contract (documented in ports/README.md) is
+      # 0 ok, 5 usage, 10 network, 12 not-in-index, 13 sha1 mismatch,
+      # 14 extract/io error. --help with no subcommand is a usage error by
+      # design, so we assert exit 5 rather than treating it as a failure.
+      - name: ports/client - host build + smoke test
+        run: |
+          make -C ports/client host_amiport
+          set +e
+          out=$(./ports/client/host_amiport --help); rc=$?
+          set -e
+          echo "$out"
+          echo "$out" | grep -q "usage: amiport"
+          test "$rc" -eq 5
+
+      - name: ports/client - ILP32 host build via i386/gcc + smoke test
+        run: |
+          make -C ports/client host32_amiport
+          set +e
+          out=$(docker run --rm -v "$PWD/ports/client":/work -w /work i386/gcc ./host32_amiport --help); rc=$?
+          set -e
+          echo "$out"
+          echo "$out" | grep -q "usage: amiport"
+          test "$rc" -eq 5
+
+      # -----------------------------------------------------------------
+      # java/ - mjvm, a micro-JVM in ANSI C. Compile HelloWorld.java to
+      # bytecode, run it on the host build of mjvm, then cross-compile
+      # mjvm itself to an Amiga hunk exe.
+      # -----------------------------------------------------------------
+      - name: java - javac HelloWorld.class
+        run: make -C java hello
+
+      - name: java - host mjvm runs the bytecode
+        run: make -C java host
+
+      - name: java - cross-compile mjvm (m68k-amigaos)
+        run: make -C java amiga
+
+      - name: java - verify binary type
+        run: file java/vm/mjvm | grep -q "AmigaOS loadseg"
